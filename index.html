@@ -29,7 +29,7 @@
                     <h1>Hola, Juan</h1>
                     <p class="date-display">Febrero 2026</p>
                 </div>
-                <div class="settings-icon">
+                <div class="settings-icon" id="settings-trigger">
                     <svg viewBox="0 0 24 24" width="24" height="24">
                         <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" />
                         <path
@@ -58,7 +58,7 @@
 
             <section class="insight-card">
                 <div class="card-content">
-                    <h3>Progreso Mensual</h3>
+                    <h3>Progreo Mensual</h3>
                     <p id="comparison-text">Vas un poco mejor que el mes pasado. ¡Buen ritmo!</p>
                 </div>
                 <div class="comparison-visual">
@@ -105,6 +105,30 @@
                 <p>"No estás gastando más, solo estás siendo más consciente. ✨"</p>
             </section>
         </main>
+
+        <!-- Settings View -->
+        <div id="settings-view" class="view overlay">
+            <div class="settings-container">
+                <button id="close-settings" class="close-btn">&times;</button>
+                <h2>Configuración</h2>
+
+                <div class="settings-group">
+                    <h3>Tus Datos</h3>
+                    <button id="clear-data" class="settings-action danger">
+                        Borrar todos los datos
+                    </button>
+                    <p class="action-desc">Esto eliminará todas tus transacciones de este teléfono.</p>
+                </div>
+
+                <div class="settings-group">
+                    <h3>App</h3>
+                    <div class="settings-info">
+                        <span>Versión</span>
+                        <span>1.0.0 (Beta)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Quick Add Modal/View -->
         <div id="quick-add" class="view overlay">

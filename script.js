@@ -32,6 +32,12 @@ const totalIncomeDisplay = document.getElementById('total-income');
 const totalSpentDisplay = document.getElementById('total-spent');
 const estimateTag = document.getElementById('estimate-tag');
 
+// Settings Elements
+const settingsView = document.getElementById('settings-view');
+const settingsTrigger = document.getElementById('settings-trigger');
+const closeSettings = document.getElementById('close-settings');
+const clearDataBtn = document.getElementById('clear-data');
+
 // Nav Elements
 const navHome = document.getElementById('nav-home');
 const navAnalysis = document.getElementById('nav-analysis');
@@ -52,9 +58,8 @@ function loadFromStorage() {
         recalculateTotals();
     } else {
         // First time? Use default data
-        state.transactions = defaultData.transactions;
-        state.totalIncome = defaultData.totalIncome;
-        state.totalSpent = defaultData.totalSpent;
+        state.transactions = [...defaultData.transactions];
+        recalculateTotals();
         saveToStorage();
     }
 }
@@ -176,6 +181,27 @@ function setupEventListeners() {
         navAnalysis.classList.add('active');
         navHome.classList.remove('active');
         renderAnalysis();
+    });
+
+    // Settings
+    settingsTrigger.addEventListener('click', () => {
+        settingsView.classList.add('active');
+    });
+
+    closeSettings.addEventListener('click', () => {
+        settingsView.classList.remove('active');
+    });
+
+    clearDataBtn.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) {
+            state.transactions = [];
+            recalculateTotals();
+            saveToStorage();
+            renderDashboard();
+            renderAnalysis();
+            settingsView.classList.remove('active');
+            showToast('Todos los datos han sido borrados.');
+        }
     });
 
     addTrigger.addEventListener('click', () => {

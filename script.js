@@ -1,0 +1,290 @@
+// App State
+const state = {
+    totalIncome: 0,
+    totalSpent: 0,
+    transactions: [],
+    currentType: 'expense'
+};
+
+// Default data for first-time users
+const defaultData = {
+    totalIncome: 3500.00,
+    totalSpent: 2260.00,
+    transactions: [
+        { id: 1, type: 'expense', name: 'Supermercado', amount: 85.50, date: 'Hoy, 14:20' },
+        { id: 2, type: 'income', name: 'Venta Diseño', amount: 450.00, date: 'Ayer, 18:00' },
+        { id: 3, type: 'expense', name: 'Internet', amount: 45.00, date: '2 Feb, 10:00' }
+    ]
+};
+
+// DOM Elements
+const dashboard = document.getElementById('dashboard');
+const analysisView = document.getElementById('analysis');
+const quickAdd = document.getElementById('quick-add');
+const addTrigger = document.getElementById('add-trigger');
+const closeAdd = document.getElementById('close-add');
+const saveBtn = document.getElementById('save-transaction');
+const inputAmount = document.getElementById('input-amount');
+const typeBtns = document.querySelectorAll('.type-btn');
+const transactionsList = document.getElementById('transactions-list');
+const remainingDisplay = document.getElementById('remaining-amount');
+const totalIncomeDisplay = document.getElementById('total-income');
+const totalSpentDisplay = document.getElementById('total-spent');
+const estimateTag = document.getElementById('estimate-tag');
+
+// Nav Elements
+const navHome = document.getElementById('nav-home');
+const navAnalysis = document.getElementById('nav-analysis');
+
+// Initialize
+function init() {
+    loadFromStorage();
+    renderDashboard();
+    renderAnalysis();
+    setupEventListeners();
+}
+
+function loadFromStorage() {
+    const saved = localStorage.getItem('calma_data');
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        state.transactions = parsed.transactions || [];
+        recalculateTotals();
+    } else {
+        // First time? Use default data
+        state.transactions = defaultData.transactions;
+        state.totalIncome = defaultData.totalIncome;
+        state.totalSpent = defaultData.totalSpent;
+        saveToStorage();
+    }
+}
+
+function saveToStorage() {
+    localStorage.setItem('calma_data', JSON.stringify({
+        transactions: state.transactions
+    }));
+}
+
+function recalculateTotals() {
+    state.totalIncome = 0;
+    state.totalSpent = 0;
+    state.transactions.forEach(t => {
+        if (t.type === 'income') state.totalIncome += t.amount;
+        else state.totalSpent += t.amount;
+    });
+}
+
+function renderDashboard() {
+    const remaining = state.totalIncome - state.totalSpent;
+    remainingDisplay.textContent = formatCurrency(remaining);
+    totalIncomeDisplay.textContent = formatCurrency(state.totalIncome);
+    totalSpentDisplay.textContent = formatCurrency(state.totalSpent);
+
+    // Smart Estimation Check
+    if (state.transactions.length < 5) {
+        estimateTag.style.display = 'inline-block';
+        estimateTag.textContent = 'Basado en tu promedio 💡';
+    } else {
+        estimateTag.textContent = 'Datos reales al día ✨';
+    }
+
+    transactionsList.innerHTML = '';
+    state.transactions.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'transaction-item';
+        item.innerHTML = `
+            <div class="item-info">
+                <h4>${t.name}</h4>
+                <p>${t.date}</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="item-amount" style="color: ${t.type === 'income' ? 'var(--income-text)' : 'var(--spent-text)'}">
+                    ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                </div>
+                <button class="delete-btn" onclick="deleteTransaction(${t.id})">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        transactionsList.appendChild(item);
+    });
+}
+
+function renderAnalysis() {
+    const categories = {};
+    let totalExpenses = 0;
+
+    state.transactions.filter(t => t.type === 'expense').forEach(t => {
+        categories[t.name] = (categories[t.name] || 0) + t.amount;
+        totalExpenses += t.amount;
+    });
+
+    // Sort categories by amount
+    const sortedCats = Object.entries(categories).sort((a, b) => b[1] - a[1]);
+
+    // Update Chart Total
+    document.getElementById('chart-total').textContent = formatCurrency(totalExpenses);
+
+    // Update Chart Visual (Conic Gradient)
+    const chart = document.getElementById('category-chart');
+    let currentPercentage = 0;
+    const colors = ['#5DB7B7', '#F4A261', '#E76F51', '#264653', '#2A9D8F'];
+
+    const gradientParts = sortedCats.map((cat, i) => {
+        const percentage = (cat[1] / totalExpenses) * 100;
+        const color = colors[i % colors.length];
+        const res = `${color} ${currentPercentage}% ${currentPercentage + percentage}%`;
+        currentPercentage += percentage;
+        return res;
+    });
+
+    if (totalExpenses > 0) {
+        chart.style.background = `conic-gradient(${gradientParts.join(', ')})`;
+    } else {
+        chart.style.background = '#e2e8f0';
+    }
+
+    // Render category list
+    const catList = document.getElementById('analysis-categories');
+    catList.innerHTML = '';
+    sortedCats.forEach((cat, i) => {
+        const item = document.createElement('div');
+        item.className = 'cat-item';
+        item.innerHTML = `
+            <div class="cat-info">
+                <div class="cat-dot" style="background: ${colors[i % colors.length]}"></div>
+                <span class="cat-name">${cat[0]}</span>
+            </div>
+            <span class="cat-value">${formatCurrency(cat[1])}</span>
+        `;
+        catList.appendChild(item);
+    });
+}
+
+function setupEventListeners() {
+    // Navigation
+    navHome.addEventListener('click', () => {
+        switchView('dashboard');
+        navHome.classList.add('active');
+        navAnalysis.classList.remove('active');
+    });
+
+    navAnalysis.addEventListener('click', () => {
+        switchView('analysis');
+        navAnalysis.classList.add('active');
+        navHome.classList.remove('active');
+        renderAnalysis();
+    });
+
+    addTrigger.addEventListener('click', () => {
+        quickAdd.classList.add('active');
+        inputAmount.focus();
+    });
+
+    closeAdd.addEventListener('click', () => {
+        quickAdd.classList.remove('active');
+        inputAmount.value = '';
+    });
+
+    typeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            typeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.currentType = btn.dataset.type;
+        });
+    });
+
+    saveBtn.addEventListener('click', () => {
+        const amount = parseFloat(inputAmount.value);
+        if (!amount || isNaN(amount)) return;
+
+        addTransaction(amount);
+        quickAdd.classList.remove('active');
+        inputAmount.value = '';
+    });
+
+    document.querySelectorAll('.tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+            const amount = parseFloat(inputAmount.value);
+            if (!amount) return;
+
+            addTransaction(amount, tag.textContent);
+            quickAdd.classList.remove('active');
+            inputAmount.value = '';
+        });
+    });
+}
+
+function switchView(viewId) {
+    dashboard.style.display = viewId === 'dashboard' ? 'block' : 'none';
+    analysisView.style.display = viewId === 'analysis' ? 'block' : 'none';
+}
+
+function addTransaction(amount, name = null) {
+    const newTx = {
+        id: Date.now(),
+        type: state.currentType,
+        name: name || (state.currentType === 'income' ? 'Ingreso extra' : 'Gasto variado'),
+        amount: amount,
+        date: 'Recién'
+    };
+
+    state.transactions.unshift(newTx);
+    recalculateTotals();
+    saveToStorage();
+    renderDashboard();
+    renderAnalysis();
+
+    showToast(`${state.currentType === 'income' ? '¡Genial! Ingreso guardado.' : 'Gasto anotado. No pasa nada.'}`);
+}
+
+function deleteTransaction(id) {
+    state.transactions = state.transactions.filter(t => t.id !== id);
+    recalculateTotals();
+    saveToStorage();
+    renderDashboard();
+    renderAnalysis();
+    showToast('Transacción eliminada.');
+}
+
+function formatCurrency(val) {
+    return new Intl.NumberFormat('es-CL', {
+        style: 'currency',
+        currency: 'CLP',
+        minimumFractionDigits: 0
+    }).format(val).replace('CLP', '$');
+}
+
+function showToast(message) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.position = 'absolute';
+    toast.style.bottom = '100px';
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.background = '#334155';
+    toast.style.color = 'white';
+    toast.style.padding = '12px 24px';
+    toast.style.borderRadius = '30px';
+    toast.style.fontSize = '14px';
+    toast.style.zIndex = '1000';
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+
+    toast.textContent = message;
+    document.getElementById('app-container').appendChild(toast);
+
+    setTimeout(() => toast.style.opacity = '1', 10);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
+}
+
+// Start the app
+init();

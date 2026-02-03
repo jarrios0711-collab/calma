@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calma - Finanzas sin estrés</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#5DB7B7">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js');
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div id="app-container">
+        <!-- Main Dashboard View -->
+        <main id="dashboard" class="view active">
+            <header>
+                <div class="user-greeting">
+                    <h1>Hola, Juan</h1>
+                    <p class="date-display">Febrero 2026</p>
+                </div>
+                <div class="settings-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                            fill="none" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                </div>
+            </header>
+
+            <section class="balance-card">
+                <div class="label">Lo que queda</div>
+                <div class="amount" id="remaining-amount">$1.240,00</div>
+                <div class="estimate-tag" id="estimate-tag">Basado en tu promedio 💡</div>
+            </section>
+
+            <div class="summary-grid">
+                <div class="summary-item income">
+                    <span class="label">Ganado</span>
+                    <span class="value" id="total-income">$3.500,00</span>
+                </div>
+                <div class="summary-item spent">
+                    <span class="label">Gastado</span>
+                    <span class="value" id="total-spent">$2.260,00</span>
+                </div>
+            </div>
+
+            <section class="insight-card">
+                <div class="card-content">
+                    <h3>Progreso Mensual</h3>
+                    <p id="comparison-text">Vas un poco mejor que el mes pasado. ¡Buen ritmo!</p>
+                </div>
+                <div class="comparison-visual">
+                    <div class="bar-container">
+                        <div class="bar current" style="height: 60%;"></div>
+                        <div class="bar previous" style="height: 75%;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="recent-activity">
+                <div class="section-header">
+                    <h3>Actividad reciente</h3>
+                    <button class="btn-text">Ver todo</button>
+                </div>
+                <div id="transactions-list" class="activity-list">
+                    <!-- Transactions injected here -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Analysis View -->
+        <main id="analysis" class="view">
+            <header>
+                <div class="user-greeting">
+                    <h1>Tu Análisis</h1>
+                    <p class="date-display">Distribución de gastos</p>
+                </div>
+            </header>
+
+            <section class="chart-section">
+                <div id="category-chart" class="donut-chart">
+                    <div class="chart-center">
+                        <span id="chart-total">$0</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="category-list" id="analysis-categories">
+                <!-- Categories injected here -->
+            </section>
+
+            <section class="reassurance-card">
+                <p>"No estás gastando más, solo estás siendo más consciente. ✨"</p>
+            </section>
+        </main>
+
+        <!-- Quick Add Modal/View -->
+        <div id="quick-add" class="view overlay">
+            <div class="add-container">
+                <button id="close-add" class="close-btn">&times;</button>
+                <h2>¿Qué pasó?</h2>
+
+                <div class="amount-input-container">
+                    <span class="currency">$</span>
+                    <input type="number" id="input-amount" placeholder="0.00" autofocus inputmode="decimal">
+                </div>
+
+                <div class="type-selector">
+                    <button class="type-btn active" data-type="expense">Gasto</button>
+                    <button class="type-btn" data-type="income">Ingreso</button>
+                </div>
+
+                <div class="suggested-tags">
+                    <p>Acceso rápido:</p>
+                    <div class="tags-group">
+                        <span class="tag">Comida</span>
+                        <span class="tag">Transporte</span>
+                        <span class="tag">Servicios</span>
+                        <span class="tag">Venta</span>
+                    </div>
+                </div>
+
+                <button id="save-transaction" class="btn-primary">Listo</button>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <button id="nav-home" class="nav-item active">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>Inicio</span>
+            </button>
+            <button id="add-trigger" class="add-btn">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="white">
+                    <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="3"
+                        stroke-linecap="round" />
+                    <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="3"
+                        stroke-linecap="round" />
+                </svg>
+            </button>
+            <button id="nav-analysis" class="nav-item">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M22 12A10 10 0 0 0 12 2v10z" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>Análisis</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

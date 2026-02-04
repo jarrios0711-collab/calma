@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v9'; // "Entrada Rápida" Integrated Input
+const CACHE_NAME = 'calma-v10'; // Force refresh for Integrated Input v2.5.0
 const ASSETS = [
     './',
     './index.html',

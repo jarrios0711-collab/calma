@@ -1,5 +1,7 @@
 // App State
 const state = {
+    userName: 'Juan',
+    darkMode: false,
     totalIncome: 0,
     totalSpent: 0,
     transactions: [],
@@ -8,6 +10,8 @@ const state = {
 
 // Default data for first-time users
 const defaultData = {
+    userName: 'Amigo',
+    darkMode: false,
     totalIncome: 3500.00,
     totalSpent: 2260.00,
     transactions: [
@@ -31,12 +35,16 @@ const remainingDisplay = document.getElementById('remaining-amount');
 const totalIncomeDisplay = document.getElementById('total-income');
 const totalSpentDisplay = document.getElementById('total-spent');
 const estimateTag = document.getElementById('estimate-tag');
+const userNameDisplay = document.getElementById('user-name-display');
 
 // Settings Elements
 const settingsView = document.getElementById('settings-view');
 const settingsTrigger = document.getElementById('settings-trigger');
 const closeSettings = document.getElementById('close-settings');
 const clearDataBtn = document.getElementById('clear-data');
+const exportDataBtn = document.getElementById('export-data');
+const darkModeToggle = document.getElementById('dark-mode-toggle');
+const userNameInput = document.getElementById('user-name-input');
 
 // Nav Elements
 const navHome = document.getElementById('nav-home');
@@ -55,10 +63,15 @@ function loadFromStorage() {
     if (saved) {
         const parsed = JSON.parse(saved);
         state.transactions = parsed.transactions || [];
+        state.userName = parsed.userName || 'Amigo';
+        state.darkMode = parsed.darkMode || false;
         recalculateTotals();
+        applyDarkMode();
     } else {
         // First time? Use default data
         state.transactions = [...defaultData.transactions];
+        state.userName = defaultData.userName;
+        state.darkMode = defaultData.darkMode;
         recalculateTotals();
         saveToStorage();
     }
@@ -66,8 +79,15 @@ function loadFromStorage() {
 
 function saveToStorage() {
     localStorage.setItem('calma_data', JSON.stringify({
-        transactions: state.transactions
+        transactions: state.transactions,
+        userName: state.userName,
+        darkMode: state.darkMode
     }));
+}
+
+function applyDarkMode() {
+    document.body.classList.toggle('dark-mode', state.darkMode);
+    if (darkModeToggle) darkModeToggle.checked = state.darkMode;
 }
 
 function recalculateTotals() {
@@ -84,6 +104,8 @@ function renderDashboard() {
     remainingDisplay.textContent = formatCurrency(remaining);
     totalIncomeDisplay.textContent = formatCurrency(state.totalIncome);
     totalSpentDisplay.textContent = formatCurrency(state.totalSpent);
+    userNameDisplay.textContent = `Hola, ${state.userName}`;
+    userNameInput.value = state.userName;
 
     // Smart Estimation Check
     if (state.transactions.length < 5) {
@@ -192,6 +214,22 @@ function setupEventListeners() {
         settingsView.classList.remove('active');
     });
 
+    userNameInput.addEventListener('input', (e) => {
+        state.userName = e.target.value || 'Amigo';
+        userNameDisplay.textContent = `Hola, ${state.userName}`;
+        saveToStorage();
+    });
+
+    darkModeToggle.addEventListener('change', (e) => {
+        state.darkMode = e.target.checked;
+        applyDarkMode();
+        saveToStorage();
+    });
+
+    exportDataBtn.addEventListener('click', () => {
+        exportToCSV();
+    });
+
     clearDataBtn.addEventListener('click', () => {
         if (confirm('¿Estás seguro de que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) {
             state.transactions = [];
@@ -273,6 +311,35 @@ function deleteTransaction(id) {
     renderDashboard();
     renderAnalysis();
     showToast('Transacción eliminada.');
+}
+
+function exportToCSV() {
+    if (state.transactions.length === 0) {
+        showToast('No hay datos para exportar.');
+        return;
+    }
+
+    const headers = ['Fecha', 'Tipo', 'Nombre', 'Monto'];
+    const rows = state.transactions.map(t => [
+        t.date,
+        t.type === 'income' ? 'Ingreso' : 'Gasto',
+        t.name,
+        t.amount
+    ]);
+
+    let csvContent = "data:text/csv;charset=utf-8,"
+        + headers.join(",") + "\n"
+        + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `calma_datos_${state.userName}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast('Archivo listo. ✨');
 }
 
 function formatCurrency(val) {

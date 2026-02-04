@@ -26,7 +26,7 @@
         <main id="dashboard" class="view active">
             <header>
                 <div class="user-greeting">
-                    <h1>Hola, Juan</h1>
+                    <h1 id="user-name-display">Hola, Juan</h1>
                     <p class="date-display">Febrero 2026</p>
                 </div>
                 <div class="settings-icon" id="settings-trigger">
@@ -113,7 +113,29 @@
                 <h2>Configuración</h2>
 
                 <div class="settings-group">
+                    <h3>Perfil</h3>
+                    <div class="input-group">
+                        <label for="user-name-input">Tu nombre</label>
+                        <input type="text" id="user-name-input" placeholder="¿Cómo te llamas?">
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Visual</h3>
+                    <div class="settings-row">
+                        <span>Modo Noche de Paz</span>
+                        <label class="switch">
+                            <input type="checkbox" id="dark-mode-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-group">
                     <h3>Tus Datos</h3>
+                    <button id="export-data" class="settings-action">
+                        Exportar a Excel (CSV)
+                    </button>
                     <button id="clear-data" class="settings-action danger">
                         Borrar todos los datos
                     </button>

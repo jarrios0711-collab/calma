@@ -370,14 +370,14 @@ header .date-display {
 
 .inline-input-row input {
     flex: 1;
-    border: 2px solid var(--primary-light);
-    background: var(--white);
+    border: 2px solid var(--primary);
+    background: #FFFFFF !important;
     padding: 16px;
     border-radius: 16px;
     font-family: 'Outfit', sans-serif;
     font-size: 32px;
     font-weight: 600;
-    color: #1e293b !important;
+    color: #000000 !important;
     width: 60%;
     transition: var(--transition);
 }
@@ -385,7 +385,11 @@ header .date-display {
 body.dark-mode .inline-input-row input {
     background: #1E293B !important;
     color: #FFFFFF !important;
-    border: 2px solid #334155;
+    border: 2px solid var(--primary);
+}
+
+.inline-input-row input::placeholder {
+    color: #94a3b8 !important;
 }
 
 .type-selector-inline {

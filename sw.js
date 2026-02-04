@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v17'; // Nuclear Reset v2.7.2
+const CACHE_NAME = 'calma-v19'; // High Contrast Fix v2.8.1
 const ASSETS = [
     './',
     './index.html',

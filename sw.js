@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v6'; // Forced update to 2.2.2
+const CACHE_NAME = 'calma-v8'; // Adding "Palabras de Aliento"
 const ASSETS = [
     './',
     './index.html',

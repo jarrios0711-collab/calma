@@ -1,14 +1,28 @@
 // App State
 const state = {
-    version: '2.2.2',
+    version: '2.4.0',
     userName: 'Juan',
     darkMode: false,
     totalIncome: 0,
     totalSpent: 0,
     transactions: [],
-    fixedExpenses: [], // "Los Sabuesos"
+    fixedExpenses: [],
+    colchon: { goal: 1000, current: 0 },
     currentType: 'expense'
 };
+
+const phrases = [
+    "No estás gastando más, solo estás siendo más consciente. ✨",
+    "Cada peso que anotas es un paso hacia tu tranquilidad. 🌊",
+    "Hoy es un buen día para cuidar tu futuro. 🏹",
+    "Tu 'yo' del próximo mes te dará las gracias. 🤝",
+    "La calma no es no tener gastos, es saber dónde están. 🧘‍♂️",
+    "Un presupuesto no es una jaula, es un mapa hacia tu libertad. 🗺️",
+    "Respira. Todo tiene solución si lo tienes anotado. 💎",
+    "Pequeños ahorros hoy, grandes sueños mañana. ☁️",
+    "Tú controlas el dinero, no al revés. 👑",
+    "Incluso los días difíciles son mejores con orden. 🌈"
+];
 
 // Default data for first-time users
 const defaultData = {
@@ -24,7 +38,11 @@ const defaultData = {
     fixedExpenses: [
         { id: 1, name: 'Arriendo', amount: 500 },
         { id: 2, name: 'Internet', amount: 30 }
-    ]
+    ],
+    colchon: {
+        goal: 1500,
+        current: 450
+    }
 };
 
 // DOM Elements
@@ -57,9 +75,23 @@ const newFixedName = document.getElementById('new-fixed-name');
 const newFixedAmount = document.getElementById('new-fixed-amount');
 const addFixedBtn = document.getElementById('add-fixed-btn');
 
+// Colchon Elements
+const colchonProgress = document.getElementById('colchon-progress');
+const colchonPercent = document.getElementById('colchon-percent');
+const colchonText = document.getElementById('colchon-text');
+const colchonGoalInput = document.getElementById('colchon-goal-input');
+const colchonCurrentInput = document.getElementById('colchon-current-input');
+const motivationalDisplay = document.getElementById('motivational-message');
+
 // Nav Elements
 const navHome = document.getElementById('nav-home');
 const navAnalysis = document.getElementById('nav-analysis');
+
+function updateMotivationalMessage() {
+    if (!motivationalDisplay) return;
+    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+    motivationalDisplay.textContent = `"${randomPhrase}"`;
+}
 
 // Initialize
 function init() {
@@ -67,6 +99,7 @@ function init() {
     renderDashboard();
     renderAnalysis();
     renderFixedExpensesSettings();
+    updateMotivationalMessage();
     setupEventListeners();
 }
 
@@ -78,6 +111,7 @@ function loadFromStorage() {
         state.userName = parsed.userName || 'Amigo';
         state.darkMode = parsed.darkMode || false;
         state.fixedExpenses = parsed.fixedExpenses || [];
+        state.colchon = parsed.colchon || { goal: 1000, current: 0 };
         recalculateTotals();
         applyDarkMode();
     } else {
@@ -86,6 +120,7 @@ function loadFromStorage() {
         state.userName = defaultData.userName;
         state.darkMode = defaultData.darkMode;
         state.fixedExpenses = [...defaultData.fixedExpenses];
+        state.colchon = { ...defaultData.colchon };
         recalculateTotals();
         saveToStorage();
     }
@@ -96,7 +131,8 @@ function saveToStorage() {
         transactions: state.transactions,
         userName: state.userName,
         darkMode: state.darkMode,
-        fixedExpenses: state.fixedExpenses
+        fixedExpenses: state.fixedExpenses,
+        colchon: state.colchon
     }));
 }
 
@@ -135,6 +171,7 @@ function renderDashboard() {
     if (userNameInput) userNameInput.value = state.userName;
 
     renderPendingSabuesos(pendingSabuesos);
+    renderColchon();
 
     // Smart Estimation Check
     if (state.transactions.length < 5) {
@@ -348,6 +385,22 @@ function setupEventListeners() {
         });
     }
 
+    if (colchonGoalInput) {
+        colchonGoalInput.addEventListener('input', (e) => {
+            state.colchon.goal = parseFloat(e.target.value) || 0;
+            renderColchon();
+            saveToStorage();
+        });
+    }
+
+    if (colchonCurrentInput) {
+        colchonCurrentInput.addEventListener('input', (e) => {
+            state.colchon.current = parseFloat(e.target.value) || 0;
+            renderColchon();
+            saveToStorage();
+        });
+    }
+
     if (addFixedBtn) {
         addFixedBtn.addEventListener('click', () => {
             addFixedExpense();
@@ -433,6 +486,7 @@ function addTransaction(amount, name = null) {
     saveToStorage();
     renderDashboard();
     renderAnalysis();
+    updateMotivationalMessage();
 
     showToast(`${state.currentType === 'income' ? '¡Genial! Ingreso guardado.' : 'Gasto anotado. No pasa nada.'}`);
 }

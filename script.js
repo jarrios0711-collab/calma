@@ -1,6 +1,5 @@
-// App State
 const state = {
-    version: '2.7.1',
+    version: '2.7.2',
     userName: 'Juan',
     darkMode: false,
     totalIncome: 0,
@@ -10,6 +9,29 @@ const state = {
     colchon: { goal: 1000, current: 0 },
     currentType: 'expense'
 };
+
+function nuclearReset() {
+    if (confirm("¿Quieres intentar un reset profundo? Esto borrará tus datos guardados pero arreglará la app si está trabada.")) {
+        // Clear all caches
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                for (let name of names) caches.delete(name);
+            });
+        }
+        // Unregister service workers
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) registration.unregister();
+            });
+        }
+        // Clear local storage
+        localStorage.clear();
+        // Refresh
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 500);
+    }
+}
 
 const phrases = [
     "No estás gastando más, solo estás siendo más consciente. ✨",

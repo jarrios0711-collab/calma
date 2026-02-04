@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v16'; // Restoration Reset v2.7.1
+const CACHE_NAME = 'calma-v17'; // Nuclear Reset v2.7.2
 const ASSETS = [
     './',
     './index.html',

@@ -346,7 +346,69 @@ header .date-display {
     transform: translateY(-20px) scale(0.9);
 }
 
-/* Quick Add Styles */
+/* Inline Quick Add */
+.quick-add-inline {
+    background: var(--white);
+    padding: 24px;
+    border-radius: var(--border-radius);
+    margin: 0 24px 24px;
+    box-shadow: var(--shadow);
+}
+
+.inline-input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.inline-input-row .currency {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.inline-input-row input {
+    flex: 1;
+    border: none;
+    background: var(--bg-color);
+    padding: 16px;
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-dark);
+    width: 60%;
+}
+
+.inline-input-row input:focus {
+    outline: none;
+    background: var(--primary-light);
+}
+
+.type-selector-inline {
+    display: flex;
+    gap: 8px;
+}
+
+.type-selector-inline button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: var(--bg-color);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.type-selector-inline button.active {
+    background: var(--primary);
+    color: white;
+}
+
 .add-container {
     padding-top: 40px;
     flex: 1;
@@ -608,6 +670,54 @@ body.dark-mode .add-fixed-row input {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(93, 183, 183, 0.2);
+}
+
+/* Colchón Card */
+.colchon-card {
+    background: var(--white);
+    margin: 0 24px 24px;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.colchon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.colchon-header span:first-child {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.colchon-header span:last-child {
+    font-size: 14px;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--bg-color);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}
+
+#colchon-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
 }
 
 /* Sabuesos Section */

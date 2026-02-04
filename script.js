@@ -1,6 +1,6 @@
 // App State
 const state = {
-    version: '2.4.0',
+    version: '2.5.0',
     userName: 'Juan',
     darkMode: false,
     totalIncome: 0,
@@ -424,17 +424,12 @@ function setupEventListeners() {
     // Quick Add
     if (addTrigger) {
         addTrigger.addEventListener('click', () => {
-            if (quickAdd) {
-                quickAdd.classList.add('active');
-                if (inputAmount) inputAmount.focus();
+            switchView('dashboard'); // Ensure we are on home
+            if (inputAmount) {
+                inputAmount.focus();
+                // Smooth scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
-        });
-    }
-
-    if (closeAdd) {
-        closeAdd.addEventListener('click', () => {
-            if (quickAdd) quickAdd.classList.remove('active');
-            if (inputAmount) inputAmount.value = '';
         });
     }
 

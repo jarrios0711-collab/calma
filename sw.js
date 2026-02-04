@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v8'; // Adding "Palabras de Aliento"
+const CACHE_NAME = 'calma-v9'; // "Entrada Rápida" Integrated Input
 const ASSETS = [
     './',
     './index.html',

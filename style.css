@@ -593,11 +593,21 @@ header .date-display {
     font-family: inherit;
     font-size: 16px;
     background: var(--bg-color);
+    color: var(--text-dark);
+    transition: var(--transition);
 }
 
-.input-group input:focus {
+body.dark-mode .input-group input,
+body.dark-mode .add-fixed-row input {
+    border-color: #334155;
+    background: #1E293B;
+}
+
+.input-group input:focus,
+.add-fixed-row input:focus {
     outline: none;
     border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(93, 183, 183, 0.2);
 }
 
 /* Sabuesos Section */

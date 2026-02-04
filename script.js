@@ -443,21 +443,23 @@ function setupEventListeners() {
 
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
+            if (!inputAmount) return;
             const amount = parseFloat(inputAmount.value);
             if (!amount || isNaN(amount)) return;
             addTransaction(amount);
             if (quickAdd) quickAdd.classList.remove('active');
-            if (inputAmount) inputAmount.value = '';
+            inputAmount.value = '';
         });
     }
 
     document.querySelectorAll('.tag').forEach(tag => {
         tag.addEventListener('click', () => {
+            if (!inputAmount) return;
             const amount = parseFloat(inputAmount.value);
             if (!amount) return;
             addTransaction(amount, tag.textContent);
             if (quickAdd) quickAdd.classList.remove('active');
-            if (inputAmount) inputAmount.value = '';
+            inputAmount.value = '';
         });
     });
 }

@@ -22,10 +22,17 @@ body.dark-mode {
     --primary: #5DB7B7;
     --primary-light: #1E293B;
     --secondary: #F4A261;
-    --text-dark: #F1F5F9;
-    --text-muted: #94A3B8;
+    --text-dark: #FFFFFF;
+    /* Pure white for max contrast */
+    --text-muted: #CBD5E1;
+    /* Lighter grey */
     --white: #1E293B;
-    --shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    /* Brighter income/spent for dark backgrounds */
+    --income-bg: rgba(20, 184, 166, 0.2);
+    --income-text: #4ADE80;
+    --spent-bg: rgba(239, 68, 68, 0.2);
+    --spent-text: #F87171;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 * {

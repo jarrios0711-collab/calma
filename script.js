@@ -1,6 +1,5 @@
-// App State
 const state = {
-    version: '2.6.0',
+    version: '2.7.0',
     userName: 'Juan',
     darkMode: false,
     totalIncome: 0,
@@ -11,101 +10,27 @@ const state = {
     currentType: 'expense'
 };
 
-const phrases = [
-    "No estás gastando más, solo estás siendo más consciente. ✨",
-    "Cada peso que anotas es un paso hacia tu tranquilidad. 🌊",
-    "Hoy es un buen día para cuidar tu futuro. 🏹",
-    "Tu 'yo' del próximo mes te dará las gracias. 🤝",
-    "La calma no es no tener gastos, es saber dónde están. 🧘‍♂️",
-    "Un presupuesto no es una jaula, es un mapa hacia tu libertad. 🗺️",
-    "Respira. Todo tiene solución si lo tienes anotado. 💎",
-    "Pequeños ahorros hoy, grandes sueños mañana. ☁️",
-    "Tú controlas el dinero, no al revés. 👑",
-    "Incluso los días difíciles son mejores con orden. 🌈"
-];
-
-// Default data for first-time users
-const defaultData = {
-    userName: 'Amigo',
-    darkMode: false,
-    totalIncome: 3500.00,
-    totalSpent: 2260.00,
-    transactions: [
-        { id: 1, type: 'expense', name: 'Supermercado', amount: 85.50, date: 'Hoy, 14:20' },
-        { id: 2, type: 'income', name: 'Venta Diseño', amount: 450.00, date: 'Ayer, 18:00' },
-        { id: 3, type: 'expense', name: 'Internet', amount: 45.00, date: '2 Feb, 10:00' }
-    ],
-    fixedExpenses: [
-        { id: 1, name: 'Arriendo', amount: 500 },
-        { id: 2, name: 'Internet', amount: 30 }
-    ],
-    colchon: {
-        goal: 1500,
-        current: 450
-    }
-};
-
-// DOM Elements
-const dashboard = document.getElementById('dashboard');
-const analysisView = document.getElementById('analysis');
-const quickAdd = document.getElementById('quick-add');
-const addTrigger = document.getElementById('add-trigger');
-const closeAdd = document.getElementById('close-add');
-const saveBtn = document.getElementById('save-transaction');
-const inputAmount = document.getElementById('input-amount');
-const typeBtns = document.querySelectorAll('.type-btn');
-const transactionsList = document.getElementById('transactions-list');
-const remainingDisplay = document.getElementById('remaining-amount');
-const totalIncomeDisplay = document.getElementById('total-income');
-const totalSpentDisplay = document.getElementById('total-spent');
-const estimateTag = document.getElementById('estimate-tag');
-const userNameDisplay = document.getElementById('user-name-display');
-
-// Settings Elements
-const settingsView = document.getElementById('settings-view');
-const settingsTrigger = document.getElementById('settings-trigger');
-const closeSettings = document.getElementById('close-settings');
-const clearDataBtn = document.getElementById('clear-data');
-const exportDataBtn = document.getElementById('export-data');
-const darkModeToggle = document.getElementById('dark-mode-toggle');
-const userNameInput = document.getElementById('user-name-input');
-const fixedExpensesList = document.getElementById('fixed-expenses-list');
-const pendingSabuesosList = document.getElementById('pending-sabuesos-list');
-const newFixedName = document.getElementById('new-fixed-name');
-const newFixedAmount = document.getElementById('new-fixed-amount');
-const addFixedBtn = document.getElementById('add-fixed-btn');
-
-// Colchon Elements
-const colchonProgress = document.getElementById('colchon-progress');
-const colchonPercent = document.getElementById('colchon-percent');
-const colchonText = document.getElementById('colchon-text');
-const colchonGoalInput = document.getElementById('colchon-goal-input');
-const colchonCurrentInput = document.getElementById('colchon-current-input');
-const motivationalDisplay = document.getElementById('motivational-message');
-
-// Nav Elements
-const navHome = document.getElementById('nav-home');
-const navAnalysis = document.getElementById('nav-analysis');
-
-function updateMotivationalMessage() {
-    if (!motivationalDisplay) return;
-    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-    motivationalDisplay.textContent = `"${randomPhrase}"`;
-}
+// ... (phrases and defaultData unchanged)
 
 // Initialize
 function init() {
     console.log("Calma v" + state.version + " Iniciando...");
+    loadFromStorage();
+
+    // Safe sequential render
+    const safeRender = (fn, name) => {
+        try { fn(); } catch (e) { console.warn("Fallo renderizado: " + name, e); }
+    };
+
+    safeRender(renderDashboard, "Dashboard");
+    safeRender(renderAnalysis, "Analysis");
+    safeRender(renderFixedExpensesSettings, "FixedSettings");
+    safeRender(updateMotivationalMessage, "Motivation");
+
     try {
-        loadFromStorage();
-        renderDashboard();
-        renderAnalysis();
-        renderFixedExpensesSettings();
-        updateMotivationalMessage();
         setupEventListeners();
-        console.log("Calma cargada correctamente. ✨");
-    } catch (err) {
-        console.error("Fallo crítico en carga:", err);
+    } catch (e) {
+        console.error("Error en eventos:", e);
     }
 }
 

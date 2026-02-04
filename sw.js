@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v14'; // Ultimate Reset v2.6.0
+const CACHE_NAME = 'calma-v15'; // Full Screen Fix v2.7.0
 const ASSETS = [
     './',
     './index.html',

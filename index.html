@@ -78,6 +78,16 @@
                     <!-- Transactions injected here -->
                 </div>
             </section>
+
+            <section class="sabuesos-section">
+                <div class="section-header">
+                    <h3>Sabuesos pendientes 🐕</h3>
+                </div>
+                <div id="pending-sabuesos-list" class="sabuesos-list">
+                    <!-- Pending fixed expenses here -->
+                </div>
+                <p class="action-desc">Toca un sabueso para marcarlo como pagado.</p>
+            </section>
         </main>
 
         <!-- Analysis View -->
@@ -128,6 +138,18 @@
                             <input type="checkbox" id="dark-mode-toggle">
                             <span class="slider round"></span>
                         </label>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Tus Sabuesos (Fijos)</h3>
+                    <div id="fixed-expenses-list" class="fixed-list">
+                        <!-- List of fixed expenses with delete buttons -->
+                    </div>
+                    <div class="add-fixed-row">
+                        <input type="text" id="new-fixed-name" placeholder="Ej: Arriendo">
+                        <input type="number" id="new-fixed-amount" placeholder="0">
+                        <button id="add-fixed-btn" class="btn-small">+</button>
                     </div>
                 </div>
 

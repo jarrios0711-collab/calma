@@ -1,11 +1,12 @@
 // App State
 const state = {
-    version: '2.1.0',
+    version: '2.2.0',
     userName: 'Juan',
     darkMode: false,
     totalIncome: 0,
     totalSpent: 0,
     transactions: [],
+    fixedExpenses: [], // "Los Sabuesos"
     currentType: 'expense'
 };
 
@@ -19,6 +20,10 @@ const defaultData = {
         { id: 1, type: 'expense', name: 'Supermercado', amount: 85.50, date: 'Hoy, 14:20' },
         { id: 2, type: 'income', name: 'Venta Diseño', amount: 450.00, date: 'Ayer, 18:00' },
         { id: 3, type: 'expense', name: 'Internet', amount: 45.00, date: '2 Feb, 10:00' }
+    ],
+    fixedExpenses: [
+        { id: 1, name: 'Arriendo', amount: 500 },
+        { id: 2, name: 'Internet', amount: 30 }
     ]
 };
 
@@ -46,6 +51,11 @@ const clearDataBtn = document.getElementById('clear-data');
 const exportDataBtn = document.getElementById('export-data');
 const darkModeToggle = document.getElementById('dark-mode-toggle');
 const userNameInput = document.getElementById('user-name-input');
+const fixedExpensesList = document.getElementById('fixed-expenses-list');
+const pendingSabuesosList = document.getElementById('pending-sabuesos-list');
+const newFixedName = document.getElementById('new-fixed-name');
+const newFixedAmount = document.getElementById('new-fixed-amount');
+const addFixedBtn = document.getElementById('add-fixed-btn');
 
 // Nav Elements
 const navHome = document.getElementById('nav-home');
@@ -56,6 +66,7 @@ function init() {
     loadFromStorage();
     renderDashboard();
     renderAnalysis();
+    renderFixedExpensesSettings();
     setupEventListeners();
 }
 
@@ -66,6 +77,7 @@ function loadFromStorage() {
         state.transactions = parsed.transactions || [];
         state.userName = parsed.userName || 'Amigo';
         state.darkMode = parsed.darkMode || false;
+        state.fixedExpenses = parsed.fixedExpenses || [];
         recalculateTotals();
         applyDarkMode();
     } else {
@@ -73,6 +85,7 @@ function loadFromStorage() {
         state.transactions = [...defaultData.transactions];
         state.userName = defaultData.userName;
         state.darkMode = defaultData.darkMode;
+        state.fixedExpenses = [...defaultData.fixedExpenses];
         recalculateTotals();
         saveToStorage();
     }
@@ -82,7 +95,8 @@ function saveToStorage() {
     localStorage.setItem('calma_data', JSON.stringify({
         transactions: state.transactions,
         userName: state.userName,
-        darkMode: state.darkMode
+        darkMode: state.darkMode,
+        fixedExpenses: state.fixedExpenses
     }));
 }
 
@@ -103,13 +117,24 @@ function recalculateTotals() {
 function renderDashboard() {
     if (!remainingDisplay) return;
 
-    const remaining = state.totalIncome - state.totalSpent;
+    // Calculate pending sabuesos
+    const currentMonth = new Date().getMonth();
+    const pendingSabuesos = state.fixedExpenses.filter(fe => {
+        // Check if there's a transaction this month with the same name
+        return !state.transactions.some(t => t.name === fe.name && t.type === 'expense');
+    });
+
+    const totalPendingSabuesos = pendingSabuesos.reduce((sum, fe) => sum + fe.amount, 0);
+    const remaining = state.totalIncome - state.totalSpent - totalPendingSabuesos;
+
     remainingDisplay.textContent = formatCurrency(remaining);
     totalIncomeDisplay.textContent = formatCurrency(state.totalIncome);
     totalSpentDisplay.textContent = formatCurrency(state.totalSpent);
 
     if (userNameDisplay) userNameDisplay.textContent = `Hola, ${state.userName}`;
     if (userNameInput) userNameInput.value = state.userName;
+
+    renderPendingSabuesos(pendingSabuesos);
 
     // Smart Estimation Check
     if (state.transactions.length < 5) {
@@ -141,6 +166,79 @@ function renderDashboard() {
         `;
         transactionsList.appendChild(item);
     });
+}
+
+function renderPendingSabuesos(pending) {
+    if (!pendingSabuesosList) return;
+    pendingSabuesosList.innerHTML = '';
+
+    if (pending.length === 0) {
+        pendingSabuesosList.innerHTML = '<p class="action-desc">¡Todos los sabuesos están alimentados! 🦴</p>';
+        return;
+    }
+
+    pending.forEach(fe => {
+        const item = document.createElement('div');
+        item.className = 'sabueso-item';
+        item.onclick = () => paySabueso(fe);
+        item.innerHTML = `
+            <div class="sabueso-info">
+                <h4>${fe.name}</h4>
+                <p>Pendiente este mes</p>
+            </div>
+            <div class="sabueso-amount">${formatCurrency(fe.amount)}</div>
+        `;
+        pendingSabuesosList.appendChild(item);
+    });
+}
+
+function renderFixedExpensesSettings() {
+    if (!fixedExpensesList) return;
+    fixedExpensesList.innerHTML = '';
+
+    state.fixedExpenses.forEach(fe => {
+        const row = document.createElement('div');
+        row.className = 'fixed-row';
+        row.innerHTML = `
+            <span>${fe.name} (${formatCurrency(fe.amount)})</span>
+            <button class="delete-btn" onclick="deleteFixedExpense(${fe.id})">&times;</button>
+        `;
+        fixedExpensesList.appendChild(row);
+    });
+}
+
+function addFixedExpense() {
+    const name = newFixedName.value.trim();
+    const amount = parseFloat(newFixedAmount.value);
+
+    if (!name || isNaN(amount)) return;
+
+    state.fixedExpenses.push({
+        id: Date.now(),
+        name,
+        amount
+    });
+
+    newFixedName.value = '';
+    newFixedAmount.value = '';
+
+    saveToStorage();
+    renderFixedExpensesSettings();
+    renderDashboard();
+    showToast('Sabueso guardado. 🐕');
+}
+
+function deleteFixedExpense(id) {
+    state.fixedExpenses = state.fixedExpenses.filter(fe => fe.id !== id);
+    saveToStorage();
+    renderFixedExpensesSettings();
+    renderDashboard();
+    showToast('Sabueso eliminado.');
+}
+
+function paySabueso(fe) {
+    state.currentType = 'expense';
+    addTransaction(fe.amount, fe.name);
 }
 
 function renderAnalysis() {
@@ -247,6 +345,12 @@ function setupEventListeners() {
     if (exportDataBtn) {
         exportDataBtn.addEventListener('click', () => {
             exportToCSV();
+        });
+    }
+
+    if (addFixedBtn) {
+        addFixedBtn.addEventListener('click', () => {
+            addFixedExpense();
         });
     }
 

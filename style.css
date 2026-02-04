@@ -593,6 +593,96 @@ header .date-display {
     border-color: var(--primary);
 }
 
+/* Sabuesos Section */
+.sabuesos-section {
+    padding: 0 24px;
+    margin-bottom: 32px;
+}
+
+.sabuesos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+.sabueso-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--white);
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.sabueso-item:active {
+    transform: scale(0.98);
+}
+
+.sabueso-info h4 {
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.sabueso-info p {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.sabueso-amount {
+    font-weight: 600;
+    color: var(--spent-text);
+}
+
+/* Settings Fixed List */
+.fixed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.fixed-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--bg-color);
+    border-radius: 12px;
+}
+
+.fixed-row span {
+    font-size: 14px;
+}
+
+.add-fixed-row {
+    display: flex;
+    gap: 8px;
+}
+
+.add-fixed-row input {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: var(--bg-color);
+    font-size: 14px;
+    flex: 1;
+}
+
+.btn-small {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 .settings-action {
     width: 100%;
     padding: 16px;

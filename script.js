@@ -200,6 +200,7 @@ function setupEventListeners() {
             switchView('dashboard');
             navHome.classList.add('active');
             if (navAnalysis) navAnalysis.classList.remove('active');
+            if (settingsView) settingsView.classList.remove('active');
         });
     }
 
@@ -208,6 +209,7 @@ function setupEventListeners() {
             switchView('analysis');
             navAnalysis.classList.add('active');
             if (navHome) navHome.classList.remove('active');
+            if (settingsView) settingsView.classList.remove('active');
             renderAnalysis();
         });
     }
@@ -261,6 +263,7 @@ function setupEventListeners() {
         });
     }
 
+    // Quick Add
     if (addTrigger) {
         addTrigger.addEventListener('click', () => {
             if (quickAdd) {
@@ -269,42 +272,41 @@ function setupEventListeners() {
             }
         });
     }
-    quickAdd.classList.add('active');
-    inputAmount.focus();
-});
 
-closeAdd.addEventListener('click', () => {
-    quickAdd.classList.remove('active');
-    inputAmount.value = '';
-});
+    if (closeAdd) {
+        closeAdd.addEventListener('click', () => {
+            if (quickAdd) quickAdd.classList.remove('active');
+            if (inputAmount) inputAmount.value = '';
+        });
+    }
 
-typeBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        typeBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.currentType = btn.dataset.type;
+    typeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            typeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.currentType = btn.dataset.type;
+        });
     });
-});
 
-saveBtn.addEventListener('click', () => {
-    const amount = parseFloat(inputAmount.value);
-    if (!amount || isNaN(amount)) return;
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const amount = parseFloat(inputAmount.value);
+            if (!amount || isNaN(amount)) return;
+            addTransaction(amount);
+            if (quickAdd) quickAdd.classList.remove('active');
+            if (inputAmount) inputAmount.value = '';
+        });
+    }
 
-    addTransaction(amount);
-    quickAdd.classList.remove('active');
-    inputAmount.value = '';
-});
-
-document.querySelectorAll('.tag').forEach(tag => {
-    tag.addEventListener('click', () => {
-        const amount = parseFloat(inputAmount.value);
-        if (!amount) return;
-
-        addTransaction(amount, tag.textContent);
-        quickAdd.classList.remove('active');
-        inputAmount.value = '';
+    document.querySelectorAll('.tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+            const amount = parseFloat(inputAmount.value);
+            if (!amount) return;
+            addTransaction(amount, tag.textContent);
+            if (quickAdd) quickAdd.classList.remove('active');
+            if (inputAmount) inputAmount.value = '';
+        });
     });
-});
 }
 
 function switchView(viewId) {

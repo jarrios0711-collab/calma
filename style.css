@@ -275,8 +275,11 @@ header .date-display {
 .delete-btn {
     background: none;
     border: none;
-    padding: 8px;
+    padding: 10px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 0.3;
     transition: var(--transition);
 }

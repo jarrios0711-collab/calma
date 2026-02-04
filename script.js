@@ -1,6 +1,6 @@
 // App State
 const state = {
-    version: '2.5.2',
+    version: '2.6.0',
     userName: 'Juan',
     darkMode: false,
     totalIncome: 0,
@@ -533,11 +533,15 @@ function exportToCSV() {
 }
 
 function formatCurrency(val) {
-    return new Intl.NumberFormat('es-CL', {
-        style: 'currency',
-        currency: 'CLP',
-        minimumFractionDigits: 0
-    }).format(val).replace('CLP', '$');
+    try {
+        return new Intl.NumberFormat('es-CL', {
+            style: 'currency',
+            currency: 'CLP',
+            minimumFractionDigits: 0
+        }).format(val).replace('CLP', '$');
+    } catch (e) {
+        return '$' + Math.round(val).toLocaleString();
+    }
 }
 
 function showToast(message) {

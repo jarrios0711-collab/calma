@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v13'; // Emergency Refresh v2.5.2
+const CACHE_NAME = 'calma-v14'; // Ultimate Reset v2.6.0
 const ASSETS = [
     './',
     './index.html',

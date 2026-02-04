@@ -1,5 +1,6 @@
+// App State
 const state = {
-    version: '2.7.0',
+    version: '2.7.1',
     userName: 'Juan',
     darkMode: false,
     totalIncome: 0,
@@ -10,27 +11,108 @@ const state = {
     currentType: 'expense'
 };
 
-// ... (phrases and defaultData unchanged)
+const phrases = [
+    "No estás gastando más, solo estás siendo más consciente. ✨",
+    "Cada peso que anotas es un paso hacia tu tranquilidad. 🌊",
+    "Hoy es un buen día para cuidar tu futuro. 🏹",
+    "Tu 'yo' del próximo mes te dará las gracias. 🤝",
+    "La calma no es no tener gastos, es saber dónde están. 🧘‍♂️",
+    "Un presupuesto no es una jaula, es un mapa hacia tu libertad. 🗺️",
+    "Respira. Todo tiene solución si lo tienes anotado. 💎",
+    "Pequeños ahorros hoy, grandes sueños mañana. ☁️",
+    "Tú controlas el dinero, no al revés. 👑",
+    "Incluso los días difíciles son mejores con orden. 🌈"
+];
+
+// Default data for first-time users
+const defaultData = {
+    userName: 'Amigo',
+    darkMode: false,
+    totalIncome: 3500.00,
+    totalSpent: 2260.00,
+    transactions: [
+        { id: 1, type: 'expense', name: 'Supermercado', amount: 85.50, date: 'Hoy, 14:20' },
+        { id: 2, type: 'income', name: 'Venta Diseño', amount: 450.00, date: 'Ayer, 18:00' },
+        { id: 3, type: 'expense', name: 'Internet', amount: 45.00, date: '2 Feb, 10:00' }
+    ],
+    fixedExpenses: [
+        { id: 1, name: 'Arriendo', amount: 500 },
+        { id: 2, name: 'Internet', amount: 30 }
+    ],
+    colchon: {
+        goal: 1500,
+        current: 450
+    }
+};
+
+// DOM Elements
+const dashboard = document.getElementById('dashboard');
+const analysisView = document.getElementById('analysis');
+const quickAdd = document.getElementById('quick-add');
+const addTrigger = document.getElementById('add-trigger');
+const closeAdd = document.getElementById('close-add');
+const saveBtn = document.getElementById('save-transaction');
+const inputAmount = document.getElementById('input-amount');
+const typeBtns = document.querySelectorAll('.type-btn');
+const transactionsList = document.getElementById('transactions-list');
+const remainingDisplay = document.getElementById('remaining-amount');
+const totalIncomeDisplay = document.getElementById('total-income');
+const totalSpentDisplay = document.getElementById('total-spent');
+const estimateTag = document.getElementById('estimate-tag');
+const userNameDisplay = document.getElementById('user-name-display');
+
+// Settings Elements
+const settingsView = document.getElementById('settings-view');
+const settingsTrigger = document.getElementById('settings-trigger');
+const closeSettings = document.getElementById('close-settings');
+const clearDataBtn = document.getElementById('clear-data');
+const exportDataBtn = document.getElementById('export-data');
+const darkModeToggle = document.getElementById('dark-mode-toggle');
+const userNameInput = document.getElementById('user-name-input');
+const fixedExpensesList = document.getElementById('fixed-expenses-list');
+const pendingSabuesosList = document.getElementById('pending-sabuesos-list');
+const newFixedName = document.getElementById('new-fixed-name');
+const newFixedAmount = document.getElementById('new-fixed-amount');
+const addFixedBtn = document.getElementById('add-fixed-btn');
+
+// Colchon Elements
+const colchonProgress = document.getElementById('colchon-progress');
+const colchonPercent = document.getElementById('colchon-percent');
+const colchonText = document.getElementById('colchon-text');
+const colchonGoalInput = document.getElementById('colchon-goal-input');
+const colchonCurrentInput = document.getElementById('colchon-current-input');
+const motivationalDisplay = document.getElementById('motivational-message');
+
+// Nav Elements
+const navHome = document.getElementById('nav-home');
+const navAnalysis = document.getElementById('nav-analysis');
+
+function updateMotivationalMessage() {
+    if (!motivationalDisplay) return;
+    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+    motivationalDisplay.textContent = `"${randomPhrase}"`;
+}
 
 // Initialize
 function init() {
     console.log("Calma v" + state.version + " Iniciando...");
-    loadFromStorage();
-
-    // Safe sequential render
-    const safeRender = (fn, name) => {
-        try { fn(); } catch (e) { console.warn("Fallo renderizado: " + name, e); }
-    };
-
-    safeRender(renderDashboard, "Dashboard");
-    safeRender(renderAnalysis, "Analysis");
-    safeRender(renderFixedExpensesSettings, "FixedSettings");
-    safeRender(updateMotivationalMessage, "Motivation");
-
     try {
+        loadFromStorage();
+
+        // Safe sequential render
+        const safeRender = (fn, name) => {
+            try { fn(); } catch (e) { console.warn("Fallo renderizado: " + name, e); }
+        };
+
+        safeRender(renderDashboard, "Dashboard");
+        safeRender(renderAnalysis, "Analysis");
+        safeRender(renderFixedExpensesSettings, "FixedSettings");
+        safeRender(updateMotivationalMessage, "Motivation");
+
         setupEventListeners();
-    } catch (e) {
-        console.error("Error en eventos:", e);
+        console.log("Calma cargada correctamente. ✨");
+    } catch (err) {
+        console.error("Fallo crítico en carga:", err);
     }
 }
 
@@ -46,7 +128,6 @@ function loadFromStorage() {
         recalculateTotals();
         applyDarkMode();
     } else {
-        // First time? Use default data
         state.transactions = [...defaultData.transactions];
         state.userName = defaultData.userName;
         state.darkMode = defaultData.darkMode;
@@ -84,10 +165,7 @@ function recalculateTotals() {
 function renderDashboard() {
     if (!remainingDisplay) return;
 
-    // Calculate pending sabuesos
-    const currentMonth = new Date().getMonth();
     const pendingSabuesos = state.fixedExpenses.filter(fe => {
-        // Check if there's a transaction this month with the same name
         return !state.transactions.some(t => t.name === fe.name && t.type === 'expense');
     });
 
@@ -95,8 +173,8 @@ function renderDashboard() {
     const remaining = state.totalIncome - state.totalSpent - totalPendingSabuesos;
 
     remainingDisplay.textContent = formatCurrency(remaining);
-    totalIncomeDisplay.textContent = formatCurrency(state.totalIncome);
-    totalSpentDisplay.textContent = formatCurrency(state.totalSpent);
+    if (totalIncomeDisplay) totalIncomeDisplay.textContent = formatCurrency(state.totalIncome);
+    if (totalSpentDisplay) totalSpentDisplay.textContent = formatCurrency(state.totalSpent);
 
     if (userNameDisplay) userNameDisplay.textContent = `Hola, ${state.userName}`;
     if (userNameInput) userNameInput.value = state.userName;
@@ -104,36 +182,39 @@ function renderDashboard() {
     renderPendingSabuesos(pendingSabuesos);
     renderColchon();
 
-    // Smart Estimation Check
-    if (state.transactions.length < 5) {
-        estimateTag.style.display = 'inline-block';
-        estimateTag.textContent = 'Basado en tu promedio 💡';
-    } else {
-        estimateTag.textContent = 'Datos reales al día ✨';
+    if (estimateTag) {
+        if (state.transactions.length < 5) {
+            estimateTag.style.display = 'inline-block';
+            estimateTag.textContent = 'Basado en tu promedio 💡';
+        } else {
+            estimateTag.textContent = 'Datos reales al día ✨';
+        }
     }
 
-    transactionsList.innerHTML = '';
-    state.transactions.forEach(t => {
-        const item = document.createElement('div');
-        item.className = 'transaction-item';
-        item.innerHTML = `
-            <div class="item-info">
-                <h4>${t.name}</h4>
-                <p>${t.date}</p>
-            </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="item-amount" style="color: ${t.type === 'income' ? 'var(--income-text)' : 'var(--spent-text)'}">
-                    ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+    if (transactionsList) {
+        transactionsList.innerHTML = '';
+        state.transactions.forEach(t => {
+            const item = document.createElement('div');
+            item.className = 'transaction-item';
+            item.innerHTML = `
+                <div class="item-info">
+                    <h4>${t.name}</h4>
+                    <p>${t.date}</p>
                 </div>
-                <button class="delete-btn" onclick="deleteTransaction(${t.id})">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-muted)" stroke-width="2">
-                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </button>
-            </div>
-        `;
-        transactionsList.appendChild(item);
-    });
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="item-amount" style="color: ${t.type === 'income' ? 'var(--income-text)' : 'var(--spent-text)'}">
+                        ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                    </div>
+                    <button class="delete-btn" onclick="deleteTransaction(${t.id})">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            transactionsList.appendChild(item);
+        });
+    }
 }
 
 function renderPendingSabuesos(pending) {
@@ -160,10 +241,27 @@ function renderPendingSabuesos(pending) {
     });
 }
 
+function renderColchon() {
+    if (!colchonProgress) return;
+    const percent = Math.min(Math.round((state.colchon.current / state.colchon.goal) * 100), 100);
+    colchonProgress.style.width = `${percent}%`;
+    if (colchonPercent) colchonPercent.textContent = `${percent}%`;
+
+    const remainingGoal = state.colchon.goal - state.colchon.current;
+    if (colchonText) {
+        if (remainingGoal <= 0) {
+            colchonText.textContent = "¡Meta alcanzada! Tu colchón está listo. 🎉";
+        } else {
+            colchonText.textContent = `Te faltan ${formatCurrency(remainingGoal)} para tu meta. ¡Tú puedes!`;
+        }
+    }
+    if (colchonGoalInput) colchonGoalInput.value = state.colchon.goal;
+    if (colchonCurrentInput) colchonCurrentInput.value = state.colchon.current;
+}
+
 function renderFixedExpensesSettings() {
     if (!fixedExpensesList) return;
     fixedExpensesList.innerHTML = '';
-
     state.fixedExpenses.forEach(fe => {
         const row = document.createElement('div');
         row.className = 'fixed-row';
@@ -176,20 +274,13 @@ function renderFixedExpensesSettings() {
 }
 
 function addFixedExpense() {
+    if (!newFixedName || !newFixedAmount) return;
     const name = newFixedName.value.trim();
     const amount = parseFloat(newFixedAmount.value);
-
     if (!name || isNaN(amount)) return;
-
-    state.fixedExpenses.push({
-        id: Date.now(),
-        name,
-        amount
-    });
-
+    state.fixedExpenses.push({ id: Date.now(), name, amount });
     newFixedName.value = '';
     newFixedAmount.value = '';
-
     saveToStorage();
     renderFixedExpensesSettings();
     renderDashboard();
@@ -210,58 +301,48 @@ function paySabueso(fe) {
 }
 
 function renderAnalysis() {
+    if (!document.getElementById('chart-total')) return;
     const categories = {};
     let totalExpenses = 0;
-
     state.transactions.filter(t => t.type === 'expense').forEach(t => {
         categories[t.name] = (categories[t.name] || 0) + t.amount;
         totalExpenses += t.amount;
     });
-
-    // Sort categories by amount
     const sortedCats = Object.entries(categories).sort((a, b) => b[1] - a[1]);
-
-    // Update Chart Total
     document.getElementById('chart-total').textContent = formatCurrency(totalExpenses);
-
-    // Update Chart Visual (Conic Gradient)
     const chart = document.getElementById('category-chart');
-    let currentPercentage = 0;
-    const colors = ['#5DB7B7', '#F4A261', '#E76F51', '#264653', '#2A9D8F'];
-
-    const gradientParts = sortedCats.map((cat, i) => {
-        const percentage = (cat[1] / totalExpenses) * 100;
-        const color = colors[i % colors.length];
-        const res = `${color} ${currentPercentage}% ${currentPercentage + percentage}%`;
-        currentPercentage += percentage;
-        return res;
-    });
-
-    if (totalExpenses > 0) {
-        chart.style.background = `conic-gradient(${gradientParts.join(', ')})`;
-    } else {
-        chart.style.background = '#e2e8f0';
+    if (chart) {
+        let currentPercentage = 0;
+        const colors = ['#5DB7B7', '#F4A261', '#E76F51', '#264653', '#2A9D8F'];
+        const gradientParts = sortedCats.map((cat, i) => {
+            const percentage = (cat[1] / totalExpenses) * 100;
+            const color = colors[i % colors.length];
+            const res = `${color} ${currentPercentage}% ${currentPercentage + percentage}%`;
+            currentPercentage += percentage;
+            return res;
+        });
+        chart.style.background = totalExpenses > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#e2e8f0';
     }
-
-    // Render category list
     const catList = document.getElementById('analysis-categories');
-    catList.innerHTML = '';
-    sortedCats.forEach((cat, i) => {
-        const item = document.createElement('div');
-        item.className = 'cat-item';
-        item.innerHTML = `
-            <div class="cat-info">
-                <div class="cat-dot" style="background: ${colors[i % colors.length]}"></div>
-                <span class="cat-name">${cat[0]}</span>
-            </div>
-            <span class="cat-value">${formatCurrency(cat[1])}</span>
-        `;
-        catList.appendChild(item);
-    });
+    if (catList) {
+        catList.innerHTML = '';
+        sortedCats.forEach((cat, i) => {
+            const colors = ['#5DB7B7', '#F4A261', '#E76F51', '#264653', '#2A9D8F'];
+            const item = document.createElement('div');
+            item.className = 'cat-item';
+            item.innerHTML = `
+                <div class="cat-info">
+                    <div class="cat-dot" style="background: ${colors[i % colors.length]}"></div>
+                    <span class="cat-name">${cat[0]}</span>
+                </div>
+                <span class="cat-value">${formatCurrency(cat[1])}</span>
+            `;
+            catList.appendChild(item);
+        });
+    }
 }
 
 function setupEventListeners() {
-    // Navigation
     if (navHome) {
         navHome.addEventListener('click', () => {
             switchView('dashboard');
@@ -270,7 +351,6 @@ function setupEventListeners() {
             if (settingsView) settingsView.classList.remove('active');
         });
     }
-
     if (navAnalysis) {
         navAnalysis.addEventListener('click', () => {
             switchView('analysis');
@@ -280,20 +360,16 @@ function setupEventListeners() {
             renderAnalysis();
         });
     }
-
-    // Settings
     if (settingsTrigger) {
         settingsTrigger.addEventListener('click', () => {
             if (settingsView) settingsView.classList.add('active');
         });
     }
-
     if (closeSettings) {
         closeSettings.addEventListener('click', () => {
             if (settingsView) settingsView.classList.remove('active');
         });
     }
-
     if (userNameInput) {
         userNameInput.addEventListener('input', (e) => {
             state.userName = e.target.value || 'Amigo';
@@ -301,7 +377,6 @@ function setupEventListeners() {
             saveToStorage();
         });
     }
-
     if (darkModeToggle) {
         darkModeToggle.addEventListener('change', (e) => {
             state.darkMode = e.target.checked;
@@ -309,13 +384,7 @@ function setupEventListeners() {
             saveToStorage();
         });
     }
-
-    if (exportDataBtn) {
-        exportDataBtn.addEventListener('click', () => {
-            exportToCSV();
-        });
-    }
-
+    if (exportDataBtn) exportDataBtn.addEventListener('click', exportToCSV);
     if (colchonGoalInput) {
         colchonGoalInput.addEventListener('input', (e) => {
             state.colchon.goal = parseFloat(e.target.value) || 0;
@@ -323,7 +392,6 @@ function setupEventListeners() {
             saveToStorage();
         });
     }
-
     if (colchonCurrentInput) {
         colchonCurrentInput.addEventListener('input', (e) => {
             state.colchon.current = parseFloat(e.target.value) || 0;
@@ -331,39 +399,29 @@ function setupEventListeners() {
             saveToStorage();
         });
     }
-
-    if (addFixedBtn) {
-        addFixedBtn.addEventListener('click', () => {
-            addFixedExpense();
-        });
-    }
-
+    if (addFixedBtn) addFixedBtn.addEventListener('click', addFixedExpense);
     if (clearDataBtn) {
         clearDataBtn.addEventListener('click', () => {
-            if (confirm('¿Estás seguro de que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) {
+            if (confirm('¿Estás seguro?')) {
                 state.transactions = [];
                 recalculateTotals();
                 saveToStorage();
                 renderDashboard();
                 renderAnalysis();
                 if (settingsView) settingsView.classList.remove('active');
-                showToast('Todos los datos han sido borrados.');
+                showToast('Datos borrados.');
             }
         });
     }
-
-    // Quick Add
     if (addTrigger) {
         addTrigger.addEventListener('click', () => {
-            switchView('dashboard'); // Ensure we are on home
+            switchView('dashboard');
             if (inputAmount) {
                 inputAmount.focus();
-                // Smooth scroll to top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         });
     }
-
     typeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             typeBtns.forEach(b => b.classList.remove('active'));
@@ -371,33 +429,20 @@ function setupEventListeners() {
             state.currentType = btn.dataset.type;
         });
     });
-
     if (saveBtn) {
         saveBtn.addEventListener('click', () => {
             if (!inputAmount) return;
             const amount = parseFloat(inputAmount.value);
             if (!amount || isNaN(amount)) return;
             addTransaction(amount);
-            if (quickAdd) quickAdd.classList.remove('active');
             inputAmount.value = '';
         });
     }
-
-    document.querySelectorAll('.tag').forEach(tag => {
-        tag.addEventListener('click', () => {
-            if (!inputAmount) return;
-            const amount = parseFloat(inputAmount.value);
-            if (!amount) return;
-            addTransaction(amount, tag.textContent);
-            if (quickAdd) quickAdd.classList.remove('active');
-            inputAmount.value = '';
-        });
-    });
 }
 
 function switchView(viewId) {
-    dashboard.style.display = viewId === 'dashboard' ? 'block' : 'none';
-    analysisView.style.display = viewId === 'analysis' ? 'block' : 'none';
+    if (dashboard) dashboard.style.display = viewId === 'dashboard' ? 'block' : 'none';
+    if (analysisView) analysisView.style.display = viewId === 'analysis' ? 'block' : 'none';
 }
 
 function addTransaction(amount, name = null) {
@@ -408,15 +453,13 @@ function addTransaction(amount, name = null) {
         amount: amount,
         date: 'Recién'
     };
-
     state.transactions.unshift(newTx);
     recalculateTotals();
     saveToStorage();
     renderDashboard();
     renderAnalysis();
     updateMotivationalMessage();
-
-    showToast(`${state.currentType === 'income' ? '¡Genial! Ingreso guardado.' : 'Gasto anotado. No pasa nada.'}`);
+    showToast(`${state.currentType === 'income' ? '¡Genial!' : 'Gasto anotado.'}`);
 }
 
 function deleteTransaction(id) {
@@ -425,45 +468,25 @@ function deleteTransaction(id) {
     saveToStorage();
     renderDashboard();
     renderAnalysis();
-    showToast('Transacción eliminada.');
 }
 
 function exportToCSV() {
-    if (state.transactions.length === 0) {
-        showToast('No hay datos para exportar.');
-        return;
-    }
-
+    if (state.transactions.length === 0) return;
     const headers = ['Fecha', 'Tipo', 'Nombre', 'Monto'];
-    const rows = state.transactions.map(t => [
-        t.date,
-        t.type === 'income' ? 'Ingreso' : 'Gasto',
-        t.name,
-        t.amount
-    ]);
-
-    let csvContent = "data:text/csv;charset=utf-8,"
-        + headers.join(",") + "\n"
-        + rows.map(e => e.join(",")).join("\n");
-
+    const rows = state.transactions.map(t => [t.date, t.type, t.name, t.amount]);
+    let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `calma_datos_${state.userName}.csv`);
+    link.setAttribute("download", "calma_datos.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    showToast('Archivo listo. ✨');
 }
 
 function formatCurrency(val) {
     try {
-        return new Intl.NumberFormat('es-CL', {
-            style: 'currency',
-            currency: 'CLP',
-            minimumFractionDigits: 0
-        }).format(val).replace('CLP', '$');
+        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(val).replace('CLP', '$');
     } catch (e) {
         return '$' + Math.round(val).toLocaleString();
     }
@@ -472,10 +495,9 @@ function formatCurrency(val) {
 function showToast(message) {
     const existing = document.querySelector('.toast');
     if (existing) existing.remove();
-
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.style.position = 'absolute';
+    toast.style.position = 'fixed';
     toast.style.bottom = '100px';
     toast.style.left = '50%';
     toast.style.transform = 'translateX(-50%)';
@@ -483,19 +505,10 @@ function showToast(message) {
     toast.style.color = 'white';
     toast.style.padding = '12px 24px';
     toast.style.borderRadius = '30px';
-    toast.style.fontSize = '14px';
     toast.style.zIndex = '1000';
-    toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.3s';
-
     toast.textContent = message;
     document.getElementById('app-container').appendChild(toast);
-
-    setTimeout(() => toast.style.opacity = '1', 10);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 2000);
+    setTimeout(() => toast.remove(), 2000);
 }
 
 // Start the app

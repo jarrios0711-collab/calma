@@ -45,6 +45,17 @@
                 <div class="estimate-tag" id="estimate-tag">Basado en tu promedio 💡</div>
             </section>
 
+            <section class="colchon-card" id="colchon-trigger">
+                <div class="colchon-header">
+                    <span>Tu Colchón 🛋️</span>
+                    <span id="colchon-percent">40%</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="colchon-progress" class="progress-fill" style="width: 40%;"></div>
+                </div>
+                <p id="colchon-text">Te faltan $550 para tu meta. ¡Tú puedes!</p>
+            </section>
+
             <div class="summary-grid">
                 <div class="summary-item income">
                     <span class="label">Ganado</span>
@@ -142,6 +153,18 @@
                 </div>
 
                 <div class="settings-group">
+                    <h3>Tu Meta de Ahorro (El Colchón)</h3>
+                    <div class="input-group">
+                        <label>Meta total</label>
+                        <input type="number" id="colchon-goal-input" placeholder="Ej: 1000">
+                    </div>
+                    <div class="input-group" style="margin-top: 12px;">
+                        <label>Llevas ahorrado</label>
+                        <input type="number" id="colchon-current-input" placeholder="Ej: 450">
+                    </div>
+                </div>
+
+                <div class="settings-group">
                     <h3>Tus Sabuesos (Fijos)</h3>
                     <div id="fixed-expenses-list" class="fixed-list">
                         <!-- List of fixed expenses with delete buttons -->
@@ -168,7 +191,7 @@
                     <h3>App</h3>
                     <div class="settings-info">
                         <span>Versión</span>
-                        <span>2.2.2 "Los Sabuesos"</span>
+                        <span>2.3.0 "El Colchón"</span>
                     </div>
                 </div>
             </div>

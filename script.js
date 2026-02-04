@@ -100,12 +100,15 @@ function recalculateTotals() {
 }
 
 function renderDashboard() {
+    if (!remainingDisplay) return;
+
     const remaining = state.totalIncome - state.totalSpent;
     remainingDisplay.textContent = formatCurrency(remaining);
     totalIncomeDisplay.textContent = formatCurrency(state.totalIncome);
     totalSpentDisplay.textContent = formatCurrency(state.totalSpent);
-    userNameDisplay.textContent = `Hola, ${state.userName}`;
-    userNameInput.value = state.userName;
+
+    if (userNameDisplay) userNameDisplay.textContent = `Hola, ${state.userName}`;
+    if (userNameInput) userNameInput.value = state.userName;
 
     // Smart Estimation Check
     if (state.transactions.length < 5) {
@@ -192,93 +195,116 @@ function renderAnalysis() {
 
 function setupEventListeners() {
     // Navigation
-    navHome.addEventListener('click', () => {
-        switchView('dashboard');
-        navHome.classList.add('active');
-        navAnalysis.classList.remove('active');
-    });
+    if (navHome) {
+        navHome.addEventListener('click', () => {
+            switchView('dashboard');
+            navHome.classList.add('active');
+            if (navAnalysis) navAnalysis.classList.remove('active');
+        });
+    }
 
-    navAnalysis.addEventListener('click', () => {
-        switchView('analysis');
-        navAnalysis.classList.add('active');
-        navHome.classList.remove('active');
-        renderAnalysis();
-    });
+    if (navAnalysis) {
+        navAnalysis.addEventListener('click', () => {
+            switchView('analysis');
+            navAnalysis.classList.add('active');
+            if (navHome) navHome.classList.remove('active');
+            renderAnalysis();
+        });
+    }
 
     // Settings
-    settingsTrigger.addEventListener('click', () => {
-        settingsView.classList.add('active');
-    });
+    if (settingsTrigger) {
+        settingsTrigger.addEventListener('click', () => {
+            if (settingsView) settingsView.classList.add('active');
+        });
+    }
 
-    closeSettings.addEventListener('click', () => {
-        settingsView.classList.remove('active');
-    });
+    if (closeSettings) {
+        closeSettings.addEventListener('click', () => {
+            if (settingsView) settingsView.classList.remove('active');
+        });
+    }
 
-    userNameInput.addEventListener('input', (e) => {
-        state.userName = e.target.value || 'Amigo';
-        userNameDisplay.textContent = `Hola, ${state.userName}`;
-        saveToStorage();
-    });
-
-    darkModeToggle.addEventListener('change', (e) => {
-        state.darkMode = e.target.checked;
-        applyDarkMode();
-        saveToStorage();
-    });
-
-    exportDataBtn.addEventListener('click', () => {
-        exportToCSV();
-    });
-
-    clearDataBtn.addEventListener('click', () => {
-        if (confirm('¿Estás seguro de que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) {
-            state.transactions = [];
-            recalculateTotals();
+    if (userNameInput) {
+        userNameInput.addEventListener('input', (e) => {
+            state.userName = e.target.value || 'Amigo';
+            if (userNameDisplay) userNameDisplay.textContent = `Hola, ${state.userName}`;
             saveToStorage();
-            renderDashboard();
-            renderAnalysis();
-            settingsView.classList.remove('active');
-            showToast('Todos los datos han sido borrados.');
-        }
-    });
-
-    addTrigger.addEventListener('click', () => {
-        quickAdd.classList.add('active');
-        inputAmount.focus();
-    });
-
-    closeAdd.addEventListener('click', () => {
-        quickAdd.classList.remove('active');
-        inputAmount.value = '';
-    });
-
-    typeBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            typeBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            state.currentType = btn.dataset.type;
         });
-    });
+    }
 
-    saveBtn.addEventListener('click', () => {
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('change', (e) => {
+            state.darkMode = e.target.checked;
+            applyDarkMode();
+            saveToStorage();
+        });
+    }
+
+    if (exportDataBtn) {
+        exportDataBtn.addEventListener('click', () => {
+            exportToCSV();
+        });
+    }
+
+    if (clearDataBtn) {
+        clearDataBtn.addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que quieres borrar TODOS los datos? Esta acción no se puede deshacer.')) {
+                state.transactions = [];
+                recalculateTotals();
+                saveToStorage();
+                renderDashboard();
+                renderAnalysis();
+                if (settingsView) settingsView.classList.remove('active');
+                showToast('Todos los datos han sido borrados.');
+            }
+        });
+    }
+
+    if (addTrigger) {
+        addTrigger.addEventListener('click', () => {
+            if (quickAdd) {
+                quickAdd.classList.add('active');
+                if (inputAmount) inputAmount.focus();
+            }
+        });
+    }
+    quickAdd.classList.add('active');
+    inputAmount.focus();
+});
+
+closeAdd.addEventListener('click', () => {
+    quickAdd.classList.remove('active');
+    inputAmount.value = '';
+});
+
+typeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        typeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.currentType = btn.dataset.type;
+    });
+});
+
+saveBtn.addEventListener('click', () => {
+    const amount = parseFloat(inputAmount.value);
+    if (!amount || isNaN(amount)) return;
+
+    addTransaction(amount);
+    quickAdd.classList.remove('active');
+    inputAmount.value = '';
+});
+
+document.querySelectorAll('.tag').forEach(tag => {
+    tag.addEventListener('click', () => {
         const amount = parseFloat(inputAmount.value);
-        if (!amount || isNaN(amount)) return;
+        if (!amount) return;
 
-        addTransaction(amount);
+        addTransaction(amount, tag.textContent);
         quickAdd.classList.remove('active');
         inputAmount.value = '';
     });
-
-    document.querySelectorAll('.tag').forEach(tag => {
-        tag.addEventListener('click', () => {
-            const amount = parseFloat(inputAmount.value);
-            if (!amount) return;
-
-            addTransaction(amount, tag.textContent);
-            quickAdd.classList.remove('active');
-            inputAmount.value = '';
-        });
-    });
+});
 }
 
 function switchView(viewId) {

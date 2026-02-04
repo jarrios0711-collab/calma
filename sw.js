@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v5'; // Forcing update to 2.1.0
+const CACHE_NAME = 'calma-v6'; // Forced update to 2.2.2
 const ASSETS = [
     './',
     './index.html',

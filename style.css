@@ -379,11 +379,24 @@ header .date-display {
     font-weight: 600;
     color: var(--text-dark);
     width: 60%;
+    transition: var(--transition);
+}
+
+.inline-input-row input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+body.dark-mode .inline-input-row input {
+    background: #1E293B;
+    color: #FFFFFF;
+    border: 1px solid #334155;
 }
 
 .inline-input-row input:focus {
     outline: none;
     background: var(--primary-light);
+    border-color: var(--primary);
 }
 
 .type-selector-inline {

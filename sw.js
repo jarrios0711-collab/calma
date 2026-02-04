@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v11'; // Hard reset for v2.5.0
+const CACHE_NAME = 'calma-v12'; // Critical Fix for v2.5.1
 const ASSETS = [
     './',
     './index.html',

@@ -1,6 +1,6 @@
 // App State
 const state = {
-    version: '2.5.0',
+    version: '2.5.1',
     userName: 'Juan',
     darkMode: false,
     totalIncome: 0,

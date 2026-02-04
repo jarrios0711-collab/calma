@@ -1,6 +1,6 @@
 // App State
 const state = {
-    version: '2.5.1',
+    version: '2.5.2',
     userName: 'Juan',
     darkMode: false,
     totalIncome: 0,
@@ -95,12 +95,18 @@ function updateMotivationalMessage() {
 
 // Initialize
 function init() {
-    loadFromStorage();
-    renderDashboard();
-    renderAnalysis();
-    renderFixedExpensesSettings();
-    updateMotivationalMessage();
-    setupEventListeners();
+    console.log("Calma v" + state.version + " Iniciando...");
+    try {
+        loadFromStorage();
+        renderDashboard();
+        renderAnalysis();
+        renderFixedExpensesSettings();
+        updateMotivationalMessage();
+        setupEventListeners();
+        console.log("Calma cargada correctamente. ✨");
+    } catch (err) {
+        console.error("Fallo crítico en carga:", err);
+    }
 }
 
 function loadFromStorage() {

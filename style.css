@@ -374,10 +374,10 @@ header .date-display {
     background: var(--bg-color);
     padding: 16px;
     border-radius: 16px;
-    font-family: inherit;
-    font-size: 24px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--text-dark) !important;
     width: 60%;
     transition: var(--transition);
 }
@@ -388,8 +388,8 @@ header .date-display {
 }
 
 body.dark-mode .inline-input-row input {
-    background: #1E293B;
-    color: #FFFFFF;
+    background: #1E293B !important;
+    color: #FFFFFF !important;
     border: 1px solid #334155;
 }
 
@@ -397,74 +397,6 @@ body.dark-mode .inline-input-row input {
     outline: none;
     background: var(--primary-light);
     border-color: var(--primary);
-}
-
-.type-selector-inline {
-    display: flex;
-    gap: 8px;
-}
-
-.type-selector-inline button {
-    flex: 1;
-    padding: 12px;
-    border-radius: 12px;
-    border: none;
-    background: var(--bg-color);
-    color: var(--text-muted);
-    font-family: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.type-selector-inline button.active {
-    background: var(--primary);
-    color: white;
-}
-
-.add-container {
-    padding-top: 40px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.close-btn {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    background: none;
-    border: none;
-    font-size: 32px;
-    color: var(--text-muted);
-}
-
-.amount-input-container {
-    display: flex;
-    align-items: baseline;
-    justify-content: center;
-    margin: 40px 0;
-}
-
-.amount-input-container .currency {
-    font-size: 32px;
-    font-weight: 600;
-    color: var(--primary);
-}
-
-#input-amount {
-    border: none;
-    background: none;
-    font-size: 64px;
-    font-weight: 600;
-    width: 100%;
-    text-align: center;
-    color: var(--text-dark);
-}
-
-#input-amount:focus {
-    outline: none;
 }
 
 .type-selector {

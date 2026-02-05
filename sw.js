@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v30'; // Arquitectura Robusta v3.0.0
+const CACHE_NAME = 'calma-v32'; // Estética de Saldo v3.2.0
 const ASSETS = [
     './',
     './index.html',

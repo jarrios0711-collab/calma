@@ -119,8 +119,27 @@ header .date-display {
     font-size: 14px;
 }
 
-.settings-icon {
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.settings-icon,
+.incognito-icon {
     color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+}
+
+.incognito-icon.active {
+    color: var(--primary);
+}
+
+.incognito-icon:active {
+    transform: scale(0.9);
 }
 
 /* Balance Card */
@@ -129,9 +148,36 @@ header .date-display {
     color: white;
     padding: 32px;
     border-radius: var(--border-radius);
-    margin-bottom: 24px;
+    margin: 0 16px 24px;
     box-shadow: 0 10px 25px rgba(93, 183, 183, 0.3);
     text-align: center;
+    position: relative;
+    /* Added for absolute positioning of eye */
+}
+
+.incognito-trigger-card {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.incognito-trigger-card.active {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.incognito-trigger-card:active {
+    transform: scale(0.9);
 }
 
 .balance-card .label {

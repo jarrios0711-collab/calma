@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v40'; // Evolución Inteligente v4.0.0
+const CACHE_NAME = 'calma-v40-1'; // Versión Inteligente v4.0.1
 const ASSETS = [
     './',
     './index.html',

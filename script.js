@@ -91,7 +91,10 @@ const state = {
     colchon: { goal: 1000, current: 0 },
     currentType: 'expense',
     pin: '',
-    pinEnabled: false
+    pinEnabled: false,
+    currency: 'CLP',
+    incomeCategories: ['Sueldo', 'Venta', 'Freelance', 'Otro'],
+    expenseCategories: ['Comida', 'Arriendo', 'Transporte', 'Ocio', 'Salud', 'Otro']
 };
 
 /**
@@ -149,6 +152,9 @@ async function dispatch(action, payload) {
             state.pinEnabled = payload;
             if (!payload) state.pin = '';
             break;
+        case 'SET_CURRENCY':
+            state.currency = payload;
+            break;
         case 'IMPORT_DATA':
             Object.assign(state, payload);
             recalculateTotals();
@@ -199,7 +205,8 @@ const defaultData = {
         { id: 1, name: 'Arriendo', amount: 500000 },
         { id: 2, name: 'Internet', amount: 30000 }
     ],
-    colchon: { goal: 1500000, current: 450000 }
+    colchon: { goal: 1500000, current: 450000 },
+    currency: 'CLP'
 };
 
 // DOM Elements
@@ -236,6 +243,14 @@ function renderAll() {
     updateMotivationalMessage();
     updatePredictions();
     renderTrendChart();
+    renderCategoryOptions();
+}
+
+function renderCategoryOptions() {
+    const select = document.getElementById('category-select');
+    if (!select) return;
+    const categories = state.currentType === 'income' ? state.incomeCategories : state.expenseCategories;
+    select.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
 }
 
 function updatePredictions() {
@@ -527,8 +542,13 @@ function setupEventListeners() {
     // Transactions
     document.getElementById('save-transaction')?.addEventListener('click', () => {
         const amount = parseFloat(elements.inputAmount.value);
+        const category = document.getElementById('category-select')?.value || 'Otro';
         if (amount > 0) {
-            dispatch('ADD_TRANSACTION', { amount, type: state.currentType, name: state.currentType === 'income' ? 'Ingreso extra' : 'Gasto variado' });
+            dispatch('ADD_TRANSACTION', {
+                amount,
+                type: state.currentType,
+                name: category
+            });
             elements.inputAmount.value = '';
             showToast(state.currentType === 'income' ? '¡Genial! 💸' : 'Gasto anotado. 📉');
         }
@@ -539,8 +559,23 @@ function setupEventListeners() {
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             state.currentType = btn.dataset.type;
+            renderCategoryOptions();
         });
     });
+
+    // Add Central Trigger Logic
+    document.getElementById('add-trigger')?.addEventListener('click', () => {
+        switchView('dashboard');
+        elements.inputAmount.focus();
+        elements.inputAmount.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    // Currency Setting
+    const currencySelect = document.getElementById('currency-select');
+    if (currencySelect) {
+        currencySelect.value = state.currency;
+        currencySelect.addEventListener('change', (e) => dispatch('SET_CURRENCY', e.target.value));
+    }
 
     // Colchon Goals
     document.getElementById('colchon-goal-input')?.addEventListener('input', (e) => dispatch('UPDATE_COLCHON', { goal: parseFloat(e.target.value) || 0 }));
@@ -604,7 +639,9 @@ function switchView(viewId) {
  * Helpers
  */
 function formatCurrency(val) {
-    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(val).replace('CLP', '$');
+    const symbols = { 'CLP': '$', 'USD': 'US$', 'EUR': '€', 'GBP': '£' };
+    const symbol = symbols[state.currency] || '$';
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: state.currency, minimumFractionDigits: 0 }).format(val).replace(state.currency, symbol);
 }
 
 function showToast(message) {

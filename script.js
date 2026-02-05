@@ -28,6 +28,7 @@ function dispatch(action, payload) {
         case 'TOGGLE_INCOGNITO':
             state.incognitoMode = !state.incognitoMode;
             document.body.classList.toggle('incognito-active', state.incognitoMode);
+            updateIncognitoUI();
             break;
         case 'ADD_TRANSACTION':
             if (payload.amount <= 0 || isNaN(payload.amount)) {
@@ -342,6 +343,11 @@ function setupEventListeners() {
         incognitoToggle.addEventListener('change', () => dispatch('TOGGLE_INCOGNITO'));
     }
 
+    document.getElementById('incognito-trigger')?.addEventListener('click', () => dispatch('TOGGLE_INCOGNITO'));
+
+    // Sincronizar UI inicial
+    updateIncognitoUI();
+
     // Transactions
     document.getElementById('save-transaction')?.addEventListener('click', () => {
         const amount = parseFloat(elements.inputAmount.value);
@@ -430,6 +436,28 @@ function exportToCSV() {
 }
 
 // Start
+function updateIncognitoUI() {
+    const trigger = document.getElementById('incognito-trigger');
+    const toggle = document.getElementById('incognito-toggle');
+
+    if (trigger) {
+        trigger.classList.toggle('active', state.incognitoMode);
+        const eyeOpen = trigger.querySelectorAll('.eye-open');
+        const eyeClosed = trigger.querySelector('.eye-closed');
+
+        if (state.incognitoMode) {
+            eyeOpen.forEach(el => el.style.display = 'none');
+            eyeClosed.style.display = 'block';
+        } else {
+            eyeOpen.forEach(el => el.style.display = 'block');
+            eyeClosed.style.display = 'none';
+        }
+    }
+
+    if (toggle) toggle.checked = state.incognitoMode;
+    document.body.classList.toggle('incognito-active', state.incognitoMode);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadFromStorage();
     setupEventListeners();

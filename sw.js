@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v19'; // High Contrast Fix v2.8.1
+const CACHE_NAME = 'calma-v21'; // Bulletproof Visibility v2.9.0
 const ASSETS = [
     './',
     './index.html',

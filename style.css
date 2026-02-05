@@ -54,17 +54,11 @@ body {
 }
 
 #app-container {
-    width: 375px;
-    /* Fixed mobile-width for prototype */
-    height: 812px;
-    /* iPhone 13-ish height */
+    width: 100vw;
+    height: 100vh;
     background-color: var(--bg-color);
     position: relative;
     overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
-    border-radius: 40px;
-    border: 8px solid #334155;
-    /* "Frame" */
 }
 
 /* Views */
@@ -378,18 +372,25 @@ header .date-display {
     font-size: 32px;
     font-weight: 600;
     color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    caret-color: var(--primary);
     width: 60%;
     transition: var(--transition);
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 body.dark-mode .inline-input-row input {
     background: #1E293B !important;
     color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    caret-color: #FFFFFF;
     border: 2px solid var(--primary);
 }
 
 .inline-input-row input::placeholder {
     color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
 }
 
 .type-selector-inline {

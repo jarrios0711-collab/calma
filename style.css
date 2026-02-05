@@ -35,6 +35,19 @@ body.dark-mode {
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
+/* Incognito Mode - Aesthetic Blur */
+body.incognito-active .amount,
+body.incognito-active .value,
+body.incognito-active .item-amount,
+body.incognito-active .sabueso-amount,
+body.incognito-active .cat-value,
+body.incognito-active #chart-total {
+    filter: blur(8px);
+    transition: filter 0.3s ease;
+    user-select: none;
+    pointer-events: none;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -169,11 +182,13 @@ header .date-display {
     font-weight: 600;
 }
 
-.summary-item.income .value {
+.summary-item.income .value,
+.item-amount.income {
     color: var(--income-text);
 }
 
-.summary-item.spent .value {
+.summary-item.spent .value,
+.item-amount.expense {
     color: var(--spent-text);
 }
 
@@ -536,6 +551,7 @@ body.dark-mode .type-selector-inline button.active {
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: background 0.5s ease;
 }
 
 .chart-center {

@@ -1,7 +1,8 @@
 const state = {
-    version: '2.9.1',
+    version: '3.0.0', // Updated for major refactor
     userName: 'Juan',
     darkMode: false,
+    incognitoMode: false,
     totalIncome: 0,
     totalSpent: 0,
     transactions: [],
@@ -10,27 +11,71 @@ const state = {
     currentType: 'expense'
 };
 
-function nuclearReset() {
-    if (confirm("¿Quieres intentar un reset profundo? Esto borrará tus datos guardados pero arreglará la app si está trabada.")) {
-        // Clear all caches
-        if ('caches' in window) {
-            caches.keys().then(names => {
-                for (let name of names) caches.delete(name);
+/**
+ * State Management & Dispatcher
+ */
+function dispatch(action, payload) {
+    console.log(`[Dispatch] ${action}`, payload);
+
+    switch (action) {
+        case 'SET_USER_NAME':
+            state.userName = payload || 'Amigo';
+            break;
+        case 'TOGGLE_DARK_MODE':
+            state.darkMode = payload;
+            applyDarkMode();
+            break;
+        case 'TOGGLE_INCOGNITO':
+            state.incognitoMode = !state.incognitoMode;
+            document.body.classList.toggle('incognito-active', state.incognitoMode);
+            break;
+        case 'ADD_TRANSACTION':
+            if (payload.amount <= 0 || isNaN(payload.amount)) {
+                showToast('Monto inválido ⚠️');
+                return;
+            }
+            state.transactions.unshift({
+                id: Date.now(),
+                ...payload,
+                date: new Date().toLocaleString('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
             });
-        }
-        // Unregister service workers
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(registrations => {
-                for (let registration of registrations) registration.unregister();
-            });
-        }
-        // Clear local storage
-        localStorage.clear();
-        // Refresh
-        setTimeout(() => {
-            window.location.reload(true);
-        }, 500);
+            recalculateTotals();
+            break;
+        case 'DELETE_TRANSACTION':
+            state.transactions = state.transactions.filter(t => t.id !== payload);
+            recalculateTotals();
+            break;
+        case 'UPDATE_COLCHON':
+            state.colchon = { ...state.colchon, ...payload };
+            break;
+        case 'ADD_FIXED':
+            state.fixedExpenses.push({ id: Date.now(), ...payload });
+            break;
+        case 'DELETE_FIXED':
+            state.fixedExpenses = state.fixedExpenses.filter(fe => fe.id !== payload);
+            break;
+        case 'CLEAR_DATA':
+            state.transactions = [];
+            recalculateTotals();
+            break;
+        default:
+            console.warn(`Acción desconocida: ${action}`);
     }
+
+    saveToStorage();
+    renderAll();
+}
+
+/**
+ * Core Logic
+ */
+function recalculateTotals() {
+    state.totalIncome = 0;
+    state.totalSpent = 0;
+    state.transactions.forEach(t => {
+        if (t.type === 'income') state.totalIncome += t.amount;
+        else state.totalSpent += t.amount;
+    });
 }
 
 const phrases = [
@@ -46,115 +91,211 @@ const phrases = [
     "Incluso los días difíciles son mejores con orden. 🌈"
 ];
 
-// Default data for first-time users
 const defaultData = {
     userName: 'Amigo',
     darkMode: false,
-    totalIncome: 3500.00,
-    totalSpent: 2260.00,
     transactions: [
-        { id: 1, type: 'expense', name: 'Supermercado', amount: 85.50, date: 'Hoy, 14:20' },
-        { id: 2, type: 'income', name: 'Venta Diseño', amount: 450.00, date: 'Ayer, 18:00' },
-        { id: 3, type: 'expense', name: 'Internet', amount: 45.00, date: '2 Feb, 10:00' }
+        { id: 1, type: 'expense', name: 'Supermercado', amount: 85000, date: 'Hoy, 14:20' },
+        { id: 2, type: 'income', name: 'Venta Diseño', amount: 450000, date: 'Ayer, 18:00' }
     ],
     fixedExpenses: [
-        { id: 1, name: 'Arriendo', amount: 500 },
-        { id: 2, name: 'Internet', amount: 30 }
+        { id: 1, name: 'Arriendo', amount: 500000 },
+        { id: 2, name: 'Internet', amount: 30000 }
     ],
-    colchon: {
-        goal: 1500,
-        current: 450
-    }
+    colchon: { goal: 1500000, current: 450000 }
 };
 
 // DOM Elements
-const dashboard = document.getElementById('dashboard');
-const analysisView = document.getElementById('analysis');
-const quickAdd = document.getElementById('quick-add');
-const addTrigger = document.getElementById('add-trigger');
-const closeAdd = document.getElementById('close-add');
-const saveBtn = document.getElementById('save-transaction');
-const inputAmount = document.getElementById('input-amount');
-const typeBtns = document.querySelectorAll('.type-btn');
-const transactionsList = document.getElementById('transactions-list');
-const remainingDisplay = document.getElementById('remaining-amount');
-const totalIncomeDisplay = document.getElementById('total-income');
-const totalSpentDisplay = document.getElementById('total-spent');
-const estimateTag = document.getElementById('estimate-tag');
-const userNameDisplay = document.getElementById('user-name-display');
+const elements = {
+    dashboard: document.getElementById('dashboard'),
+    analysisView: document.getElementById('analysis'),
+    settingsView: document.getElementById('settings-view'),
+    inputAmount: document.getElementById('input-amount'),
+    transactionsList: document.getElementById('transactions-list'),
+    remainingDisplay: document.getElementById('remaining-amount'),
+    totalIncomeDisplay: document.getElementById('total-income'),
+    totalSpentDisplay: document.getElementById('total-spent'),
+    userNameDisplay: document.getElementById('user-name-display'),
+    userNameInput: document.getElementById('user-name-input'),
+    fixedExpensesList: document.getElementById('fixed-expenses-list'),
+    pendingSabuesosList: document.getElementById('pending-sabuesos-list'),
+    colchonProgress: document.getElementById('colchon-progress'),
+    colchonPercent: document.getElementById('colchon-percent'),
+    colchonText: document.getElementById('colchon-text'),
+    motivationalDisplay: document.getElementById('motivational-message'),
+    navHome: document.getElementById('nav-home'),
+    navAnalysis: document.getElementById('nav-analysis')
+};
 
-// Settings Elements
-const settingsView = document.getElementById('settings-view');
-const settingsTrigger = document.getElementById('settings-trigger');
-const closeSettings = document.getElementById('close-settings');
-const clearDataBtn = document.getElementById('clear-data');
-const exportDataBtn = document.getElementById('export-data');
-const darkModeToggle = document.getElementById('dark-mode-toggle');
-const userNameInput = document.getElementById('user-name-input');
-const fixedExpensesList = document.getElementById('fixed-expenses-list');
-const pendingSabuesosList = document.getElementById('pending-sabuesos-list');
-const newFixedName = document.getElementById('new-fixed-name');
-const newFixedAmount = document.getElementById('new-fixed-amount');
-const addFixedBtn = document.getElementById('add-fixed-btn');
-
-// Colchon Elements
-const colchonProgress = document.getElementById('colchon-progress');
-const colchonPercent = document.getElementById('colchon-percent');
-const colchonText = document.getElementById('colchon-text');
-const colchonGoalInput = document.getElementById('colchon-goal-input');
-const colchonCurrentInput = document.getElementById('colchon-current-input');
-const motivationalDisplay = document.getElementById('motivational-message');
-
-// Nav Elements
-const navHome = document.getElementById('nav-home');
-const navAnalysis = document.getElementById('nav-analysis');
-
-function updateMotivationalMessage() {
-    if (!motivationalDisplay) return;
-    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-    motivationalDisplay.textContent = `"${randomPhrase}"`;
+/**
+ * Rendering
+ */
+function renderAll() {
+    renderDashboard();
+    renderAnalysis();
+    renderFixedExpensesSettings();
+    renderColchon();
+    updateMotivationalMessage();
 }
 
-// Initialize
-function init() {
-    console.log("Calma v" + state.version + " Iniciando...");
-    try {
-        loadFromStorage();
+function renderDashboard() {
+    if (!elements.remainingDisplay) return;
 
-        // Safe sequential render
-        const safeRender = (fn, name) => {
-            try { fn(); } catch (e) { console.warn("Fallo renderizado: " + name, e); }
-        };
+    const pendingSabuesos = state.fixedExpenses.filter(fe => {
+        return !state.transactions.some(t => t.name === fe.name && t.type === 'expense');
+    });
 
-        safeRender(renderDashboard, "Dashboard");
-        safeRender(renderAnalysis, "Analysis");
-        safeRender(renderFixedExpensesSettings, "FixedSettings");
-        safeRender(updateMotivationalMessage, "Motivation");
+    const totalPendingSabuesos = pendingSabuesos.reduce((sum, fe) => sum + fe.amount, 0);
+    const remaining = state.totalIncome - state.totalSpent - totalPendingSabuesos;
 
-        setupEventListeners();
-        console.log("Calma cargada correctamente. ✨");
-    } catch (err) {
-        console.error("Fallo crítico en carga:", err);
+    elements.remainingDisplay.textContent = formatCurrency(remaining);
+    if (elements.totalIncomeDisplay) elements.totalIncomeDisplay.textContent = formatCurrency(state.totalIncome);
+    if (elements.totalSpentDisplay) elements.totalSpentDisplay.textContent = formatCurrency(state.totalSpent);
+
+    if (elements.userNameDisplay) elements.userNameDisplay.textContent = `Hola, ${state.userName}`;
+
+    renderPendingSabuesos(pendingSabuesos);
+    renderTransactions();
+}
+
+function renderTransactions() {
+    if (!elements.transactionsList) return;
+    elements.transactionsList.innerHTML = '';
+    state.transactions.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'transaction-item';
+        item.innerHTML = `
+            <div class="item-info">
+                <h4>${t.name}</h4>
+                <p>${t.date}</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="item-amount ${t.type}">
+                    ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                </div>
+                <button class="delete-btn" onclick="dispatch('DELETE_TRANSACTION', ${t.id})">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+        elements.transactionsList.appendChild(item);
+    });
+}
+
+function renderPendingSabuesos(pending) {
+    if (!elements.pendingSabuesosList) return;
+    elements.pendingSabuesosList.innerHTML = '';
+
+    if (pending.length === 0) {
+        elements.pendingSabuesosList.innerHTML = '<p class="action-desc">¡Todos los sabuesos están alimentados! 🦴</p>';
+        return;
+    }
+
+    pending.forEach(fe => {
+        const item = document.createElement('div');
+        item.className = 'sabueso-item';
+        item.onclick = () => dispatch('ADD_TRANSACTION', { amount: fe.amount, name: fe.name, type: 'expense' });
+        item.innerHTML = `
+            <div class="sabueso-info">
+                <h4>${fe.name}</h4>
+                <p>Pendiente este mes</p>
+            </div>
+            <div class="sabueso-amount">${formatCurrency(fe.amount)}</div>
+        `;
+        elements.pendingSabuesosList.appendChild(item);
+    });
+}
+
+function renderColchon() {
+    if (!elements.colchonProgress) return;
+    const percent = Math.min(Math.round((state.colchon.current / state.colchon.goal) * 100), 100);
+    elements.colchonProgress.style.width = `${percent}%`;
+    if (elements.colchonPercent) elements.colchonPercent.textContent = `${percent}%`;
+
+    const remainingGoal = state.colchon.goal - state.colchon.current;
+    if (elements.colchonText) {
+        elements.colchonText.textContent = remainingGoal <= 0
+            ? "¡Meta alcanzada! Tu colchón está listo. 🎉"
+            : `Te faltan ${formatCurrency(remainingGoal)} para tu meta. ¡Tú puedes!`;
     }
 }
 
+function renderFixedExpensesSettings() {
+    if (!elements.fixedExpensesList) return;
+    elements.fixedExpensesList.innerHTML = '';
+    state.fixedExpenses.forEach(fe => {
+        const row = document.createElement('div');
+        row.className = 'fixed-row';
+        row.innerHTML = `
+            <span>${fe.name} (${formatCurrency(fe.amount)})</span>
+            <button class="delete-btn" onclick="dispatch('DELETE_FIXED', ${fe.id})">&times;</button>
+        `;
+        elements.fixedExpensesList.appendChild(row);
+    });
+}
+
+function renderAnalysis() {
+    const chartTotal = document.getElementById('chart-total');
+    if (!chartTotal) return;
+
+    const expenses = state.transactions.filter(t => t.type === 'expense');
+    const totalExpenses = expenses.reduce((sum, t) => sum + t.amount, 0);
+
+    chartTotal.textContent = formatCurrency(totalExpenses);
+
+    const categories = {};
+    expenses.forEach(t => {
+        categories[t.name] = (categories[t.name] || 0) + t.amount;
+    });
+
+    const sortedCats = Object.entries(categories).sort((a, b) => b[1] - a[1]);
+    const chart = document.getElementById('category-chart');
+
+    if (chart) {
+        let currentPercentage = 0;
+        const colors = ['#5DB7B7', '#F4A261', '#E76F51', '#264653', '#2A9D8F'];
+        const gradientParts = sortedCats.map((cat, i) => {
+            const percentage = (cat[1] / totalExpenses) * 100;
+            const color = colors[i % colors.length];
+            const part = `${color} ${currentPercentage}% ${currentPercentage + percentage}%`;
+            currentPercentage += percentage;
+            return part;
+        });
+        chart.style.background = totalExpenses > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#e2e8f0';
+    }
+
+    const catList = document.getElementById('analysis-categories');
+    if (catList) {
+        catList.innerHTML = '';
+        sortedCats.forEach((cat, i) => {
+            const colors = ['#5DB7B7', '#F4A261', '#E76F51', '#264653', '#2A9D8F'];
+            catList.innerHTML += `
+                <div class="cat-item">
+                    <div class="cat-info">
+                        <div class="cat-dot" style="background: ${colors[i % colors.length]}"></div>
+                        <span class="cat-name">${cat[0]}</span>
+                    </div>
+                    <span class="cat-value">${formatCurrency(cat[1])}</span>
+                </div>
+            `;
+        });
+    }
+}
+
+/**
+ * Storage & Initialization
+ */
 function loadFromStorage() {
     const saved = localStorage.getItem('calma_data');
     if (saved) {
         const parsed = JSON.parse(saved);
-        state.transactions = parsed.transactions || [];
-        state.userName = parsed.userName || 'Amigo';
-        state.darkMode = parsed.darkMode || false;
-        state.fixedExpenses = parsed.fixedExpenses || [];
-        state.colchon = parsed.colchon || { goal: 1000, current: 0 };
+        Object.assign(state, parsed);
         recalculateTotals();
         applyDarkMode();
     } else {
-        state.transactions = [...defaultData.transactions];
-        state.userName = defaultData.userName;
-        state.darkMode = defaultData.darkMode;
-        state.fixedExpenses = [...defaultData.fixedExpenses];
-        state.colchon = { ...defaultData.colchon };
+        Object.assign(state, defaultData);
         recalculateTotals();
         saveToStorage();
     }
@@ -166,352 +307,98 @@ function saveToStorage() {
         userName: state.userName,
         darkMode: state.darkMode,
         fixedExpenses: state.fixedExpenses,
-        colchon: state.colchon
+        colchon: state.colchon,
+        incognitoMode: state.incognitoMode
     }));
 }
 
 function applyDarkMode() {
     document.body.classList.toggle('dark-mode', state.darkMode);
-    if (darkModeToggle) darkModeToggle.checked = state.darkMode;
+    const toggle = document.getElementById('dark-mode-toggle');
+    if (toggle) toggle.checked = state.darkMode;
 }
 
-function recalculateTotals() {
-    state.totalIncome = 0;
-    state.totalSpent = 0;
-    state.transactions.forEach(t => {
-        if (t.type === 'income') state.totalIncome += t.amount;
-        else state.totalSpent += t.amount;
-    });
-}
-
-function renderDashboard() {
-    if (!remainingDisplay) return;
-
-    const pendingSabuesos = state.fixedExpenses.filter(fe => {
-        return !state.transactions.some(t => t.name === fe.name && t.type === 'expense');
-    });
-
-    const totalPendingSabuesos = pendingSabuesos.reduce((sum, fe) => sum + fe.amount, 0);
-    const remaining = state.totalIncome - state.totalSpent - totalPendingSabuesos;
-
-    remainingDisplay.textContent = formatCurrency(remaining);
-    if (totalIncomeDisplay) totalIncomeDisplay.textContent = formatCurrency(state.totalIncome);
-    if (totalSpentDisplay) totalSpentDisplay.textContent = formatCurrency(state.totalSpent);
-
-    if (userNameDisplay) userNameDisplay.textContent = `Hola, ${state.userName}`;
-    if (userNameInput) userNameInput.value = state.userName;
-
-    renderPendingSabuesos(pendingSabuesos);
-    renderColchon();
-
-    if (estimateTag) {
-        if (state.transactions.length < 5) {
-            estimateTag.style.display = 'inline-block';
-            estimateTag.textContent = 'Basado en tu promedio 💡';
-        } else {
-            estimateTag.textContent = 'Datos reales al día ✨';
-        }
-    }
-
-    if (transactionsList) {
-        transactionsList.innerHTML = '';
-        state.transactions.forEach(t => {
-            const item = document.createElement('div');
-            item.className = 'transaction-item';
-            item.innerHTML = `
-                <div class="item-info">
-                    <h4>${t.name}</h4>
-                    <p>${t.date}</p>
-                </div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="item-amount" style="color: ${t.type === 'income' ? 'var(--income-text)' : 'var(--spent-text)'}">
-                        ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
-                    </div>
-                    <button class="delete-btn" onclick="deleteTransaction(${t.id})">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-muted)" stroke-width="2">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                    </button>
-                </div>
-            `;
-            transactionsList.appendChild(item);
-        });
-    }
-}
-
-function renderPendingSabuesos(pending) {
-    if (!pendingSabuesosList) return;
-    pendingSabuesosList.innerHTML = '';
-
-    if (pending.length === 0) {
-        pendingSabuesosList.innerHTML = '<p class="action-desc">¡Todos los sabuesos están alimentados! 🦴</p>';
-        return;
-    }
-
-    pending.forEach(fe => {
-        const item = document.createElement('div');
-        item.className = 'sabueso-item';
-        item.onclick = () => paySabueso(fe);
-        item.innerHTML = `
-            <div class="sabueso-info">
-                <h4>${fe.name}</h4>
-                <p>Pendiente este mes</p>
-            </div>
-            <div class="sabueso-amount">${formatCurrency(fe.amount)}</div>
-        `;
-        pendingSabuesosList.appendChild(item);
-    });
-}
-
-function renderColchon() {
-    if (!colchonProgress) return;
-    const percent = Math.min(Math.round((state.colchon.current / state.colchon.goal) * 100), 100);
-    colchonProgress.style.width = `${percent}%`;
-    if (colchonPercent) colchonPercent.textContent = `${percent}%`;
-
-    const remainingGoal = state.colchon.goal - state.colchon.current;
-    if (colchonText) {
-        if (remainingGoal <= 0) {
-            colchonText.textContent = "¡Meta alcanzada! Tu colchón está listo. 🎉";
-        } else {
-            colchonText.textContent = `Te faltan ${formatCurrency(remainingGoal)} para tu meta. ¡Tú puedes!`;
-        }
-    }
-    if (colchonGoalInput) colchonGoalInput.value = state.colchon.goal;
-    if (colchonCurrentInput) colchonCurrentInput.value = state.colchon.current;
-}
-
-function renderFixedExpensesSettings() {
-    if (!fixedExpensesList) return;
-    fixedExpensesList.innerHTML = '';
-    state.fixedExpenses.forEach(fe => {
-        const row = document.createElement('div');
-        row.className = 'fixed-row';
-        row.innerHTML = `
-            <span>${fe.name} (${formatCurrency(fe.amount)})</span>
-            <button class="delete-btn" onclick="deleteFixedExpense(${fe.id})">&times;</button>
-        `;
-        fixedExpensesList.appendChild(row);
-    });
-}
-
-function addFixedExpense() {
-    if (!newFixedName || !newFixedAmount) return;
-    const name = newFixedName.value.trim();
-    const amount = parseFloat(newFixedAmount.value);
-    if (!name || isNaN(amount)) return;
-    state.fixedExpenses.push({ id: Date.now(), name, amount });
-    newFixedName.value = '';
-    newFixedAmount.value = '';
-    saveToStorage();
-    renderFixedExpensesSettings();
-    renderDashboard();
-    showToast('Sabueso guardado. 🐕');
-}
-
-function deleteFixedExpense(id) {
-    state.fixedExpenses = state.fixedExpenses.filter(fe => fe.id !== id);
-    saveToStorage();
-    renderFixedExpensesSettings();
-    renderDashboard();
-    showToast('Sabueso eliminado.');
-}
-
-function paySabueso(fe) {
-    state.currentType = 'expense';
-    addTransaction(fe.amount, fe.name);
-}
-
-function renderAnalysis() {
-    if (!document.getElementById('chart-total')) return;
-    const categories = {};
-    let totalExpenses = 0;
-    state.transactions.filter(t => t.type === 'expense').forEach(t => {
-        categories[t.name] = (categories[t.name] || 0) + t.amount;
-        totalExpenses += t.amount;
-    });
-    const sortedCats = Object.entries(categories).sort((a, b) => b[1] - a[1]);
-    document.getElementById('chart-total').textContent = formatCurrency(totalExpenses);
-    const chart = document.getElementById('category-chart');
-    if (chart) {
-        let currentPercentage = 0;
-        const colors = ['#5DB7B7', '#F4A261', '#E76F51', '#264653', '#2A9D8F'];
-        const gradientParts = sortedCats.map((cat, i) => {
-            const percentage = (cat[1] / totalExpenses) * 100;
-            const color = colors[i % colors.length];
-            const res = `${color} ${currentPercentage}% ${currentPercentage + percentage}%`;
-            currentPercentage += percentage;
-            return res;
-        });
-        chart.style.background = totalExpenses > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#e2e8f0';
-    }
-    const catList = document.getElementById('analysis-categories');
-    if (catList) {
-        catList.innerHTML = '';
-        sortedCats.forEach((cat, i) => {
-            const colors = ['#5DB7B7', '#F4A261', '#E76F51', '#264653', '#2A9D8F'];
-            const item = document.createElement('div');
-            item.className = 'cat-item';
-            item.innerHTML = `
-                <div class="cat-info">
-                    <div class="cat-dot" style="background: ${colors[i % colors.length]}"></div>
-                    <span class="cat-name">${cat[0]}</span>
-                </div>
-                <span class="cat-value">${formatCurrency(cat[1])}</span>
-            `;
-            catList.appendChild(item);
-        });
-    }
-}
-
+/**
+ * Event Listeners
+ */
 function setupEventListeners() {
-    if (navHome) {
-        navHome.addEventListener('click', () => {
-            switchView('dashboard');
-            navHome.classList.add('active');
-            if (navAnalysis) navAnalysis.classList.remove('active');
-            if (settingsView) settingsView.classList.remove('active');
-        });
+    // Navigation
+    elements.navHome?.addEventListener('click', () => switchView('dashboard'));
+    elements.navAnalysis?.addEventListener('click', () => {
+        switchView('analysis');
+        renderAnalysis();
+    });
+
+    // Settings
+    document.getElementById('settings-trigger')?.addEventListener('click', () => elements.settingsView?.classList.add('active'));
+    document.getElementById('close-settings')?.addEventListener('click', () => elements.settingsView?.classList.remove('active'));
+
+    elements.userNameInput?.addEventListener('input', (e) => dispatch('SET_USER_NAME', e.target.value));
+    document.getElementById('dark-mode-toggle')?.addEventListener('change', (e) => dispatch('TOGGLE_DARK_MODE', e.target.checked));
+
+    const incognitoToggle = document.getElementById('incognito-toggle');
+    if (incognitoToggle) {
+        incognitoToggle.checked = state.incognitoMode;
+        incognitoToggle.addEventListener('change', () => dispatch('TOGGLE_INCOGNITO'));
     }
-    if (navAnalysis) {
-        navAnalysis.addEventListener('click', () => {
-            switchView('analysis');
-            navAnalysis.classList.add('active');
-            if (navHome) navHome.classList.remove('active');
-            if (settingsView) settingsView.classList.remove('active');
-            renderAnalysis();
-        });
-    }
-    if (settingsTrigger) {
-        settingsTrigger.addEventListener('click', () => {
-            if (settingsView) settingsView.classList.add('active');
-        });
-    }
-    if (closeSettings) {
-        closeSettings.addEventListener('click', () => {
-            if (settingsView) settingsView.classList.remove('active');
-        });
-    }
-    if (userNameInput) {
-        userNameInput.addEventListener('input', (e) => {
-            state.userName = e.target.value || 'Amigo';
-            if (userNameDisplay) userNameDisplay.textContent = `Hola, ${state.userName}`;
-            saveToStorage();
-        });
-    }
-    if (darkModeToggle) {
-        darkModeToggle.addEventListener('change', (e) => {
-            state.darkMode = e.target.checked;
-            applyDarkMode();
-            saveToStorage();
-        });
-    }
-    if (exportDataBtn) exportDataBtn.addEventListener('click', exportToCSV);
-    if (colchonGoalInput) {
-        colchonGoalInput.addEventListener('input', (e) => {
-            state.colchon.goal = parseFloat(e.target.value) || 0;
-            renderColchon();
-            saveToStorage();
-        });
-    }
-    if (colchonCurrentInput) {
-        colchonCurrentInput.addEventListener('input', (e) => {
-            state.colchon.current = parseFloat(e.target.value) || 0;
-            renderColchon();
-            saveToStorage();
-        });
-    }
-    if (addFixedBtn) addFixedBtn.addEventListener('click', addFixedExpense);
-    if (clearDataBtn) {
-        clearDataBtn.addEventListener('click', () => {
-            if (confirm('¿Estás seguro?')) {
-                state.transactions = [];
-                recalculateTotals();
-                saveToStorage();
-                renderDashboard();
-                renderAnalysis();
-                if (settingsView) settingsView.classList.remove('active');
-                showToast('Datos borrados.');
-            }
-        });
-    }
-    if (addTrigger) {
-        addTrigger.addEventListener('click', () => {
-            switchView('dashboard');
-            if (inputAmount) {
-                inputAmount.focus();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        });
-    }
-    typeBtns.forEach(btn => {
+
+    // Transactions
+    document.getElementById('save-transaction')?.addEventListener('click', () => {
+        const amount = parseFloat(elements.inputAmount.value);
+        if (amount > 0) {
+            dispatch('ADD_TRANSACTION', { amount, type: state.currentType, name: state.currentType === 'income' ? 'Ingreso extra' : 'Gasto variado' });
+            elements.inputAmount.value = '';
+            showToast(state.currentType === 'income' ? '¡Genial! 💸' : 'Gasto anotado. 📉');
+        }
+    });
+
+    document.querySelectorAll('.type-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            typeBtns.forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             state.currentType = btn.dataset.type;
         });
     });
-    if (saveBtn) {
-        saveBtn.addEventListener('click', () => {
-            if (!inputAmount) return;
-            const amount = parseFloat(inputAmount.value);
-            if (!amount || isNaN(amount)) return;
-            addTransaction(amount);
-            inputAmount.value = '';
-        });
-    }
+
+    // Colchon Goals
+    document.getElementById('colchon-goal-input')?.addEventListener('input', (e) => dispatch('UPDATE_COLCHON', { goal: parseFloat(e.target.value) || 0 }));
+    document.getElementById('colchon-current-input')?.addEventListener('input', (e) => dispatch('UPDATE_COLCHON', { current: parseFloat(e.target.value) || 0 }));
+
+    // Fixed Expenses
+    document.getElementById('add-fixed-btn')?.addEventListener('click', () => {
+        const name = document.getElementById('new-fixed-name').value;
+        const amount = parseFloat(document.getElementById('new-fixed-amount').value);
+        if (name && amount > 0) {
+            dispatch('ADD_FIXED', { name, amount });
+            document.getElementById('new-fixed-name').value = '';
+            document.getElementById('new-fixed-amount').value = '';
+        }
+    });
+
+    // Data Management
+    document.getElementById('export-data')?.addEventListener('click', exportToCSV);
+    document.getElementById('clear-data')?.addEventListener('click', () => {
+        if (confirm('¿Borrar todo? Esta acción no se puede deshacer.')) {
+            dispatch('CLEAR_DATA');
+            showToast('Datos borrados.');
+        }
+    });
 }
 
 function switchView(viewId) {
-    if (dashboard) dashboard.style.display = viewId === 'dashboard' ? 'block' : 'none';
-    if (analysisView) analysisView.style.display = viewId === 'analysis' ? 'block' : 'none';
+    elements.dashboard.style.display = viewId === 'dashboard' ? 'block' : 'none';
+    elements.analysisView.style.display = viewId === 'analysis' ? 'block' : 'none';
+
+    // Update nav icons
+    elements.navHome.classList.toggle('active', viewId === 'dashboard');
+    elements.navAnalysis.classList.toggle('active', viewId === 'analysis');
 }
 
-function addTransaction(amount, name = null) {
-    const newTx = {
-        id: Date.now(),
-        type: state.currentType,
-        name: name || (state.currentType === 'income' ? 'Ingreso extra' : 'Gasto variado'),
-        amount: amount,
-        date: 'Recién'
-    };
-    state.transactions.unshift(newTx);
-    recalculateTotals();
-    saveToStorage();
-    renderDashboard();
-    renderAnalysis();
-    updateMotivationalMessage();
-    showToast(`${state.currentType === 'income' ? '¡Genial!' : 'Gasto anotado.'}`);
-}
-
-function deleteTransaction(id) {
-    state.transactions = state.transactions.filter(t => t.id !== id);
-    recalculateTotals();
-    saveToStorage();
-    renderDashboard();
-    renderAnalysis();
-}
-
-function exportToCSV() {
-    if (state.transactions.length === 0) return;
-    const headers = ['Fecha', 'Tipo', 'Nombre', 'Monto'];
-    const rows = state.transactions.map(t => [t.date, t.type, t.name, t.amount]);
-    let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "calma_datos.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
+/**
+ * Helpers
+ */
 function formatCurrency(val) {
-    try {
-        return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(val).replace('CLP', '$');
-    } catch (e) {
-        return '$' + Math.round(val).toLocaleString();
-    }
+    return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(val).replace('CLP', '$');
 }
 
 function showToast(message) {
@@ -519,19 +406,33 @@ function showToast(message) {
     if (existing) existing.remove();
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.style.position = 'fixed';
-    toast.style.bottom = '100px';
-    toast.style.left = '50%';
-    toast.style.transform = 'translateX(-50%)';
-    toast.style.background = '#334155';
-    toast.style.color = 'white';
-    toast.style.padding = '12px 24px';
-    toast.style.borderRadius = '30px';
-    toast.style.zIndex = '1000';
     toast.textContent = message;
     document.getElementById('app-container').appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
+    setTimeout(() => toast.remove(), 2500);
 }
 
-// Start the app
-init();
+function updateMotivationalMessage() {
+    if (!elements.motivationalDisplay) return;
+    elements.motivationalDisplay.textContent = `"${phrases[Math.floor(Math.random() * phrases.length)]}"`;
+}
+
+function exportToCSV() {
+    if (state.transactions.length === 0) return;
+    const headers = ['Fecha', 'Tipo', 'Nombre', 'Monto'];
+    const rows = state.transactions.map(t => [t.date, t.type, t.name, t.amount]);
+    let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", `calma_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Start
+document.addEventListener('DOMContentLoaded', () => {
+    loadFromStorage();
+    setupEventListeners();
+    renderAll();
+    console.log("Calma v3.0.0 cargada. ✨");
+});

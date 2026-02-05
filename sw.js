@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v22'; // Foco Gigante v2.9.1
+const CACHE_NAME = 'calma-v30'; // Arquitectura Robusta v3.0.0
 const ASSETS = [
     './',
     './index.html',

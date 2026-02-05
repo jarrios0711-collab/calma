@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v21'; // Bulletproof Visibility v2.9.0
+const CACHE_NAME = 'calma-v22'; // Foco Gigante v2.9.1
 const ASSETS = [
     './',
     './index.html',

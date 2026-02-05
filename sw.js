@@ -1,4 +1,4 @@
-const CACHE_NAME = 'calma-v32'; // Estética de Saldo v3.2.0
+const CACHE_NAME = 'calma-v40'; // Evolución Inteligente v4.0.0
 const ASSETS = [
     './',
     './index.html',

@@ -89,23 +89,23 @@
                 </div>
             </div>
 
-            <section class="insight-card">
-                <div class="card-content">
-                    <h3>Progreo Mensual</h3>
-                    <p id="comparison-text">Vas un poco mejor que el mes pasado. ¡Buen ritmo!</p>
+            <section class="prediction-card">
+                <div class="prediction-header">
+                    <span class="prediction-icon">✨</span>
+                    <h3>Tu Nivel de Calma</h3>
                 </div>
-                <div class="comparison-visual">
-                    <div class="bar-container">
-                        <div class="bar current" style="height: 60%;"></div>
-                        <div class="bar previous" style="height: 75%;"></div>
-                    </div>
+                <p id="prediction-text">Ingresa más datos para calcular tu futuro... 🔮</p>
+                <div class="trend-chart-container">
+                    <canvas id="trend-canvas"></canvas>
                 </div>
             </section>
 
             <section class="recent-activity">
                 <div class="section-header">
                     <h3>Actividad reciente</h3>
-                    <button class="btn-text">Ver todo</button>
+                    <div class="search-box">
+                        <input type="text" id="transaction-search" placeholder="Buscar cargo...">
+                    </div>
                 </div>
                 <div id="transactions-list" class="activity-list">
                     <!-- Transactions injected here -->
@@ -173,11 +173,15 @@
                         </label>
                     </div>
                     <div class="settings-row" style="margin-top: 12px;">
-                        <span>Modo Incógnito (Privacidad)</span>
-                        <label class="switch">
-                            <input type="checkbox" id="incognito-toggle">
-                            <span class="slider round"></span>
-                        </label>
+                        <span>Bloqueo por PIN (Opcional)</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="password" id="pin-input" placeholder="Set PIN" maxlength="4"
+                                style="width: 80px; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);">
+                            <label class="switch">
+                                <input type="checkbox" id="pin-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -252,6 +256,18 @@
                 <span>Análisis</span>
             </button>
         </nav>
+    </div>
+
+    <!-- Security Lock Overlay -->
+    <div id="lock-screen" class="view overlay"
+        style="display: none; background: var(--bg-color); z-index: 9999; justify-content: center; align-items: center; flex-direction: column;">
+        <div class="lock-container" style="text-align: center;">
+            <div class="lock-icon" style="font-size: 48px; margin-bottom: 24px;">🔒</div>
+            <h2 style="margin-bottom: 24px;">Calma está bloqueada</h2>
+            <input type="password" id="unlock-pin" placeholder="Ingresa tu PIN" maxlength="4"
+                style="font-size: 24px; width: 160px; text-align: center; padding: 12px; border-radius: 16px; border: 2px solid var(--primary); outline: none; background: var(--card-bg); color: var(--text-color);">
+            <p id="lock-error" style="color: var(--spent-text); margin-top: 12px; font-size: 14px; height: 1.2em;"></p>
+        </div>
     </div>
 
     <script src="script.js"></script>
